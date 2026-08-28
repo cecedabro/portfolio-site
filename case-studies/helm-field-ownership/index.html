@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- EDIT: title + description per study -->
+    <title>Case study title — Cédric Schippers</title>
+    <meta name="description" content="One-line summary of this incident." />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="site-nav" aria-label="Main">
+        <a class="site-nav__home" href="/">cedricschippers.dev</a>
+        <ul class="site-nav__links">
+          <li><a href="/case-studies.html">Case studies</a></li>
+          <li><a href="/architecture.html">Architecture</a></li>
+          <li><a href="/about.html">About</a></li>
+          <li><a href="https://github.com/cecedabro" rel="me">GitHub</a></li>
+        </ul>
+      </nav>
+    </header>
+
+    <main>
+      <article class="article">
+        <header class="article__header">
+          <p class="case-card__meta">
+            <span class="tag">tag-1</span>
+            <span class="tag">tag-2</span>
+            <time class="tag" datetime="2026-06">June 2026</time>
+          </p>
+          <h1><!-- EDIT -->Case study title</h1>
+        </header>
+
+        <h2>Summary</h2>
+        <!-- Two or three sentences max. What broke, what the impact was, what the root
+             cause turned out to be. A reader who stops here should still get the point. -->
+        <p></p>
+
+        <h2>Context</h2>
+        <!-- What did the relevant part of the system look like at the time? Only the
+             pieces needed to follow the story — not your full architecture. A small
+             diagram or an ASCII sketch in a <pre> block works well here. -->
+        <p></p>
+
+        <h2>Symptoms</h2>
+        <!-- What was observed, concretely? Error messages, log lines, behaviour.
+             Quote real output in <pre> blocks where you have it. -->
+        <p></p>
+
+        <h2>Investigation</h2>
+        <!-- The heart of the writeup. What did you check first, and why? Which
+             hypotheses were wrong, and what ruled them out? What measurement finally
+             pointed at the real layer? Wrong turns are not embarrassing — they show
+             method. This section should be the longest. -->
+        <p></p>
+
+        <h2>Root cause</h2>
+        <!-- One paragraph. The actual mechanism, stated precisely. If you can't state
+             it in a paragraph, the investigation section is missing a step. -->
+        <p></p>
+
+        <h2>Fix</h2>
+        <!-- What you changed and why that over the alternatives. If the fix is a
+             workaround rather than a root-cause fix (like the relay), say so
+             explicitly and explain why that was the right call. -->
+        <p></p>
+
+        <h2>What I'd do differently</h2>
+        <!-- Honest reflection: what would have found this faster, what's still open,
+             what this changed about how you work. This section is what separates a
+             writeup from a war story. -->
+        <p></p>
+
+        <footer class="article__footer">
+          <p><a href="/case-studies/index.html">← All case studies</a></p>
+        </footer>
+      </article>
+    </main>
+
+    <footer class="site-footer">
+      <p>
+        <a href="https://github.com/cecedabro" rel="me">GitHub</a>
+        <span aria-hidden="true">·</span>
+        <a href="#"><!-- EDIT: LinkedIn URL -->LinkedIn</a>
+        <span aria-hidden="true">·</span>
+        <a href="mailto:hello@cedricschippers.dev"><!-- EDIT: real address -->Email</a>
+      </p>
+      <p class="site-footer__colophon">
+        Hand-written HTML, CSS and TypeScript. Built with Vite, served by nginx on k3s.
+      </p>
+    </footer>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

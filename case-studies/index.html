@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Case studies — Cédric Schippers</title>
+    <meta
+      name="description"
+      content="Incident writeups from a bare-metal k3s homelab: root-cause debugging, in post-mortem format."
+    />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="site-nav" aria-label="Main">
+        <a class="site-nav__home" href="/">cedricschippers.dev</a>
+        <ul class="site-nav__links">
+          <li><a href="/case-studies/" aria-current="page">Case studies</a></li>
+          <li><a href="/architecture.html">Architecture</a></li>
+          <li><a href="/about.html">About</a></li>
+          <li><a href="https://github.com/cecedabro" rel="me">GitHub</a></li>
+        </ul>
+      </nav>
+    </header>
+
+    <main>
+      <section class="section" aria-labelledby="page-heading">
+        <h1 id="page-heading">Case studies</h1>
+        <p class="section__intro">
+          Incidents from my homelab, written up in post-mortem format: symptoms, investigation
+          (including the wrong turns), root cause, fix, and what I'd do differently. Some of this
+          work was AI-assisted; the diagnosis and decisions described are mine, and I can defend
+          every one of them.
+        </p>
+
+        <ul class="case-list">
+          <li class="case-card">
+            <p class="case-card__meta">
+              <span class="tag">networking</span>
+              <span class="tag">kubernetes</span>
+              <span class="tag">tcpdump</span>
+              <time class="tag" datetime="2026-06"><!-- EDIT: month it happened -->June 2026</time>
+            </p>
+            <h2 class="case-card__title">
+              <a href="/case-studies/raknet-truncated-pong/"
+                >A game server that answered every ping — with a broken reply</a
+              >
+            </h2>
+            <p>
+              <!-- EDIT: one-line summary in your own words -->
+              Proving a fault was an upstream server regression, not my network, by capturing
+              packets at the right layer — then working around it with a protocol-level fix in a
+              UDP relay.
+            </p>
+          </li>
+
+          <li class="case-card">
+            <p class="case-card__meta">
+              <span class="tag">helm</span>
+              <span class="tag">kubernetes</span>
+              <time class="tag" datetime="2026-05"><!-- EDIT: month it happened -->May 2026</time>
+            </p>
+            <h2 class="case-card__title">
+              <a href="/case-studies/helm-field-ownership/"
+                >Why Helm refused to upgrade anything I had touched with kubectl</a
+              >
+            </h2>
+            <p>
+              <!-- EDIT: one-line summary in your own words -->
+              Hitting the same upgrade conflict three times before understanding Kubernetes field
+              ownership — and why the fix was to stop patching around the chart.
+            </p>
+          </li>
+
+          <!-- EDIT: one <li class="case-card"> per writeup, newest first. Copy a block above,
+               create the matching folder under case-studies/, done. -->
+        </ul>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <p>
+        <a href="https://github.com/cecedabro" rel="me">GitHub</a>
+        <span aria-hidden="true">·</span>
+        <a href="#"><!-- EDIT: LinkedIn URL -->LinkedIn</a>
+        <span aria-hidden="true">·</span>
+        <a href="mailto:hello@cedricschippers.dev"><!-- EDIT: real address -->Email</a>
+      </p>
+      <p class="site-footer__colophon">
+        Hand-written HTML, CSS and TypeScript. Built with Vite, served by nginx on k3s.
+      </p>
+    </footer>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
