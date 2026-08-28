@@ -1,0 +1,12 @@
+.git
+.github
+.claude
+.DS_Store
+**/.DS_Store
+node_modules
+dist
+k8s
+docs
+Makefile
+README.md
+*.log

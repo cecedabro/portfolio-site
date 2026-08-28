@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: portfolio-site
+  namespace: portfolio
+  labels:
+    app.kubernetes.io/name: portfolio-site
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: portfolio-site
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+# Cloudflare Tunnel points at:
+#   http://portfolio-site.portfolio.svc.cluster.local:80
