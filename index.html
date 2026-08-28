@@ -12,17 +12,7 @@
     <link rel="stylesheet" href="/src/style.css" />
   </head>
   <body>
-    <header class="site-header">
-      <nav class="site-nav" aria-label="Main">
-        <a class="site-nav__home" href="/">cedricschippers.dev</a>
-        <ul class="site-nav__links">
-          <li><a href="/case-studies/index.html">Case studies</a></li>
-          <li><a href="/architecture.html">Architecture</a></li>
-          <li><a href="/about.html">About</a></li>
-          <li><a href="https://github.com/cecedabro" rel="me">GitHub</a></li>
-        </ul>
-      </nav>
-    </header>
+    <site-nav current="home"></site-nav>
 
     <main>
       <section class="hero">
@@ -99,18 +89,9 @@
       </section>
     </main>
 
-    <footer class="site-footer">
-      <p>
-        <a href="https://github.com/cecedabro" rel="me">GitHub</a>
-        <span aria-hidden="true">·</span>
-        <a href="#"><!-- EDIT: LinkedIn URL -->LinkedIn</a>
-        <span aria-hidden="true">·</span>
-        <a href="mailto:hello@cedricschippers.dev"><!-- EDIT: real address -->Email</a>
-      </p>
-      <p class="site-footer__colophon">
-        AI-assisted HTML, CSS and TypeScript. Built with Vite, served by nginx on k3s.
-      </p>
-    </footer>
+    <site-footer
+      colophon="AI-assisted HTML, CSS and TypeScript. Built with Vite, served by nginx on k3s."
+    ></site-footer>
 
     <script type="module" src="/src/main.ts"></script>
   </body>

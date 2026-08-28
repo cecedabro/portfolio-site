@@ -121,6 +121,13 @@ main {
 /* ------------------------------------------------------------------
    Header / navigation
    ------------------------------------------------------------------ */
+/* <site-nav> / <site-footer> are custom elements — unknown tags render
+   inline by default, which would break the centered layout shell. */
+site-nav,
+site-footer {
+  display: block;
+}
+
 .site-header {
   padding-block: var(--space-2);
   border-bottom: 1px solid var(--color-border);
