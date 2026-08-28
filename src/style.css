@@ -285,3 +285,48 @@ main {
   font-size: 0.78rem;
   margin-bottom: 0;
 }
+
+/* Case study cards — shared title rule (replaces .case-card h3 a) */
+.case-card__title {
+  font-size: 1.15rem;
+  margin: var(--space-1) 0;
+}
+
+.case-card__title a {
+  color: var(--color-text);
+}
+
+/* Case study articles */
+.article__header {
+  padding-top: var(--space-3);
+  border-bottom: 1px solid var(--color-border);
+  margin-bottom: var(--space-3);
+}
+
+.article h2 {
+  margin-top: var(--space-3);
+}
+
+.article__footer {
+  margin-top: var(--space-4);
+}
+
+/* Figures (photos, diagrams) */
+figure {
+  margin: var(--space-2) 0 var(--space-3);
+}
+
+figure img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+}
+
+figcaption {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+  margin-top: var(--space-1);
+}
