@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Architecture — Cédric Schippers</title>
+    <meta
+      name="description"
+      content="A 4-node bare-metal k3s cluster: hardware, design decisions with reasons, and known gaps."
+    />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="site-nav" aria-label="Main">
+        <a class="site-nav__home" href="/">cedricschippers.dev</a>
+        <ul class="site-nav__links">
+          <li><a href="/case-studies/index.html">Case studies</a></li>
+          <li><a href="/architecture.html" aria-current="page">Architecture</a></li>
+          <li><a href="/about.html">About</a></li>
+          <li><a href="https://github.com/cecedabro" rel="me">GitHub</a></li>
+        </ul>
+      </nav>
+    </header>
+
+    <main>
+      <article class="section">
+        <h1>Architecture</h1>
+
+        <!-- EDIT: 2-3 sentence overview. What the cluster is, what it runs, one line on
+             why it exists (learning by operating real infrastructure). -->
+        <p></p>
+
+        <h2>Overview</h2>
+        <!-- EDIT: the diagram. Start with ASCII in the <pre> below (nodes, IPs can be
+             omitted or generalized, roles, how traffic flows in via Cloudflare Tunnel).
+             Swap for an SVG later if you feel like it — the <pre> is fine to ship. -->
+        <pre>
+        </pre>
+
+        <h2>Hardware</h2>
+        <!-- EDIT: one <li> per node — machine, role, anything notable (e.g. GPU node
+             is a repurposed workstation with a GTX 1070 for transcoding). -->
+        <ul>
+          <li></li>
+          <li></li>
+          <li></li>
+          <li></li>
+        </ul>
+
+        <figure>
+          <!-- EDIT: photo of the actual machines. Put the file in src/assets/ and
+               reference it as /src/assets/cluster.jpg — Vite processes and
+               fingerprints it at build time. Phone photo is fine; janky is authentic. -->
+          <img src="/src/assets/cluster.jpg" alt="" width="1600" height="1200" />
+          <figcaption>
+            <!-- EDIT: caption naming which machine is which -->
+          </figcaption>
+        </figure>
+
+        <h2>Decisions</h2>
+        <!-- EDIT: the heart of the page. One h3 + short paragraph per decision:
+             what was chosen, what the alternative was, why. Suggested set below —
+             keep the ones you can defend in an interview, cut the rest. -->
+
+        <h3>Why k3s and not full Kubernetes</h3>
+        <p></p>
+
+        <h3>Why bare metal instead of cloud</h3>
+        <p></p>
+
+        <h3>Why NFS for media but Longhorn for application state</h3>
+        <p></p>
+
+        <h3>Why the GPU node is tainted</h3>
+        <p></p>
+
+        <h3>Why Cloudflare Tunnel instead of open ports</h3>
+        <p></p>
+
+        <h2>Known gaps</h2>
+        <!-- EDIT: the honest list — what a production setup would have that this
+             doesn't yet, and (one clause each) what you'd reach for: e.g. Ingress
+             instead of per-service LoadBalancers, RBAC, GitOps, real backups,
+             storage redundancy. This section reads as maturity, keep it. -->
+        <ul>
+          <li></li>
+          <li></li>
+          <li></li>
+          <li></li>
+        </ul>
+
+        <p>
+          Full manifests and Helm values live in the
+          <a href="https://github.com/cecedabro/homelab">homelab repository</a>.
+          <!-- EDIT: only link this once the repo history is cleaned of secrets. -->
+        </p>
+      </article>
+    </main>
+
+    <footer class="site-footer">
+      <p>
+        <a href="https://github.com/cecedabro" rel="me">GitHub</a>
+        <span aria-hidden="true">·</span>
+        <a href="#"><!-- EDIT: LinkedIn URL -->LinkedIn</a>
+        <span aria-hidden="true">·</span>
+        <a href="mailto:hello@cedricschippers.dev"><!-- EDIT: real address -->Email</a>
+      </p>
+      <p class="site-footer__colophon">
+        Hand-written HTML, CSS and TypeScript. Built with Vite, served by nginx on k3s.
+      </p>
+    </footer>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
