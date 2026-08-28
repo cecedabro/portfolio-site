@@ -2,11 +2,116 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>portfolio-site</title>
+    <title>Cédric Schippers — DevOps &amp; Infrastructure</title>
+    <meta
+      name="description"
+      content="Portfolio of Cédric Schippers: a bare-metal k3s homelab, the incidents it produced, and how they were debugged. Served from the cluster it documents."
+    />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="stylesheet" href="/src/style.css" />
   </head>
   <body>
+    <header class="site-header">
+      <nav class="site-nav" aria-label="Main">
+        <a class="site-nav__home" href="/">cedricschippers.dev</a>
+        <ul class="site-nav__links">
+          <li><a href="/case-study-raknet.html">Case studies</a></li>
+          <li><a href="/architecture.html">Architecture</a></li>
+          <li><a href="/about.html">About</a></li>
+          <li><a href="https://github.com/cecedabro" rel="me">GitHub</a></li>
+        </ul>
+      </nav>
+    </header>
+
+    <main>
+      <section class="hero">
+        <p class="status-line" title="This site is served from the k3s cluster it documents">
+          <span class="status-line__dot" aria-hidden="true"></span>
+          <span class="status-line__text"
+            >served from a 4-node bare-metal k3s cluster · exposed via Cloudflare Tunnel</span
+          >
+        </p>
+
+        <h1>Cédric Schippers</h1>
+        <p class="hero__tagline">
+          <!-- EDIT: your one-line pitch. Suggestion below, rewrite in your own words. -->
+          Software engineering student building toward DevOps — by running real infrastructure,
+          breaking it, and writing down what the failures taught me.
+        </p>
+        <p class="hero__meta">
+          HBO ICT Software Engineering, Amsterdam · seeking a DevOps internship from February 2027
+        </p>
+      </section>
+
+      <section class="section" aria-labelledby="case-studies-heading">
+        <h2 id="case-studies-heading">Case studies</h2>
+        <p class="section__intro">
+          Incident writeups from my homelab: what broke, how I found the root cause, and what I would
+          do differently. Written in post-mortem format.
+        </p>
+
+        <ul class="case-list">
+          <li class="case-card">
+            <p class="case-card__meta">
+              <span class="tag">networking</span>
+              <span class="tag">kubernetes</span>
+              <span class="tag">tcpdump</span>
+            </p>
+            <h3>
+              <a href="/case-study-raknet.html"
+                >A game server that answered every ping — with a broken reply</a
+              >
+            </h3>
+            <p>
+              <!-- EDIT: your own summary sentence. -->
+              Proving a fault was an upstream server regression, not my network, by capturing packets
+              at the right layer — then working around it with a protocol-level fix in a UDP relay.
+            </p>
+          </li>
+
+          <!-- EDIT: duplicate the <li> above for each new case study. -->
+        </ul>
+      </section>
+
+      <section class="section" aria-labelledby="stack-heading">
+        <h2 id="stack-heading">Tools I run in production*</h2>
+        <p class="section__intro">
+          <span class="footnote">*my production: a cluster my household actually depends on.</span>
+        </p>
+        <ul class="stack-list">
+          <li>k3s</li>
+          <li>Helm</li>
+          <li>Longhorn</li>
+          <li>NFS</li>
+          <li>MetalLB</li>
+          <li>Cloudflare Tunnel</li>
+          <li>WireGuard</li>
+          <li>Tailscale</li>
+          <li>Grafana</li>
+          <li>Docker</li>
+          <li>Linux</li>
+          <li>Git</li>
+          <li>TypeScript</li>
+          <li>Bitwarden</li>
+          <!-- EDIT: add/remove — keep these literal tool names, they matter for screeners. -->
+        </ul>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <p>
+        <a href="https://github.com/cecedabro" rel="me">GitHub</a>
+        <span aria-hidden="true">·</span>
+        <a href="#"><!-- EDIT: LinkedIn URL -->LinkedIn</a>
+        <span aria-hidden="true">·</span>
+        <a href="mailto:hello@cedricschippers.dev"><!-- EDIT: real address -->Email</a>
+      </p>
+      <p class="site-footer__colophon">
+        Hand-written HTML, CSS and TypeScript. Built with Vite, served by nginx on k3s.
+      </p>
+    </footer>
+
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>
