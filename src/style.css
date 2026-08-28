@@ -29,6 +29,12 @@
   box-sizing: border-box;
 }
 
+/* Reserve the vertical scrollbar's width on every page, so centered content
+   doesn't shift horizontally between pages that scroll and pages that don't. */
+html {
+  scrollbar-gutter: stable;
+}
+
 body {
   margin: 0;
   background: var(--color-bg);

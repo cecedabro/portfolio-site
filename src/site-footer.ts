@@ -6,7 +6,7 @@
 // The optional `colophon` attribute overrides the last line.
 
 const DEFAULT_COLOPHON =
-  'Hand-written HTML, CSS and TypeScript. Built with Vite, served by nginx on k3s.'
+  'AI-assisted HTML, CSS and TypeScript. Built with Vite, served by nginx on k3s.'
 
 class SiteFooter extends HTMLElement {
   connectedCallback(): void {
