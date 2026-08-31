@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>A game server that answered every ping — with a broken reply — Cédric Schippers</title>
+    <title>A game server that answered every ping with a broken reply — Cédric Schippers</title>
     <meta
       name="description"
       content="Proving a fault was an upstream server regression, not my network, by capturing packets at the right layer — then working around it with a protocol-level fix in a UDP relay."
@@ -23,48 +23,192 @@
             <span class="tag">tcpdump</span>
             <time class="tag" datetime="2026-06">June 2026</time>
           </p>
-          <h1>A game server that answered every ping — with a broken reply</h1>
+          <h1>A game server that answered every ping with a broken reply</h1>
         </header>
 
         <h2>Summary</h2>
-        <!-- Two or three sentences max. What broke, what the impact was, what the root
-             cause turned out to be. A reader who stops here should still get the point. -->
-        <p></p>
+        <p>
+          I deployed a Minecraft Bedrock server on my k3s cluster and could not connect to it from
+          my phone, even though the pod was healthy and packets were provably reaching it. Capturing
+          traffic inside the cluster showed the server replying to every discovery ping with a
+          33-byte packet where a valid reply is around 150 bytes. The cause was a regression in
+          Mojang's server binary, not in my network or my Kubernetes configuration. I worked around
+          it by rewriting the malformed packet in the relay I already had sitting in the path.
+        </p>
 
         <h2>Context</h2>
-        <!-- What did the relevant part of the system look like at the time? Only the
-             pieces needed to follow the story — not your full architecture. A small
-             diagram or an ASCII sketch in a <pre> block works well here. -->
-        <p></p>
+        <p>
+          I wanted to run a Minecraft Bedrock server on my cluster so friends could join it over the
+          internet. I live in student housing, where I have no access to the building's modem and
+          therefore cannot forward a port to the public internet.
+        </p>
+        <p>
+          My first idea was to use Tailscale, which already connects my nodes. I rejected it: every
+          player would have to be added to my tailnet to reach the server, which is impractical for
+          people joining from a phone, and it would put strangers on the same private network as my
+          entire cluster. That felt like a security risk I did not want to take.
+        </p>
+        <p>
+          What I built instead was a relay. I set up a Raspberry Pi at my mother's house, connected
+          to a modem I <em>can</em> configure, and forwarded UDP port 19132 to it. The Pi is a member
+          of my tailnet, so it can reach the cluster privately without any port being opened on my
+          own network. Its only job is to pass packets in both directions between the public internet
+          and the Kubernetes NodePort where the game server listens.
+        </p>
+        <pre>
+Phone (Minecraft Bedrock client)
+        │  UDP 19132
+        ▼
+Router at mom's house — port forward UDP 19132
+        │
+        ▼
+Raspberry Pi relay        udp-proxy.py (systemd service)
+        │  UDP over Tailscale
+        ▼
+k3s-worker-01             NodePort 30000 → 19132
+        │
+        ▼
+Minecraft Bedrock pod     namespace: minecraft
+</pre>
+        <p>
+          <!-- EDIT: optional, delete if you'd rather not explain RakNet here. -->
+          One protocol detail matters for the rest of this writeup. Bedrock uses UDP rather than TCP,
+          with a library called RakNet layered on top to add reliability and ordering. Before a
+          client tries to connect, it sends an <em>unconnected ping</em>; the server answers with an
+          <em>unconnected pong</em> containing its name, player count, protocol version and other
+          metadata. Only if the client can parse that reply does it show the server as online and
+          allow you to join.
+        </p>
 
         <h2>Symptoms</h2>
-        <!-- What was observed, concretely? Error messages, log lines, behaviour.
-             Quote real output in <pre> blocks where you have it. -->
-        <p></p>
+        <p>
+          From Kubernetes' point of view everything was fine. The pod was running, the NodePort was
+          reachable, and the relay was passing traffic. From my phone, the server never appeared as
+          joinable. However, it always timed out at the discovery stage, before any connection attempt was made.
+        </p>
+        <p>
+          <!-- EDIT: add the mc-monitor detail if you want it — the chart's probes used
+               `mc-monitor status-bedrock`, which failed on the same malformed reply and
+               killed the pod every ~58s until you patched the probes out. It's a good
+               detail: the same bug surfaced twice in two different places. -->
+        </p>
 
         <h2>Investigation</h2>
-        <!-- The heart of the writeup. What did you check first, and why? Which
-             hypotheses were wrong, and what ruled them out? What measurement finally
-             pointed at the real layer? Wrong turns are not embarrassing — they show
-             method. This section should be the longest. -->
-        <p></p>
+        <p>
+          My first working theory was that the packets were being dropped somewhere in the chain: 
+          The port forward, Tailscale, the relay, or the NodePort. I ruled that out by running
+          <code>tcpdump</code> at several points along the path. Traffic was flowing in both
+          directions at every hop, including on the cluster node itself. The server was answering.
+        </p>
+        <p>
+          That reframed the problem: if packets arrive and replies come back, the fault is not in the
+          network but might be in what those replies contain. My second theory was that the server was
+          advertising an address the client could not reach. Maybe its internal pod IP in the
+          <code>10.42.0.0/16</code> range rather than a routable one, which would explain a client
+          that sees a response and still fails to connect. I checked the server's configuration:
+        </p>
+        <pre>
+kubectl exec -n minecraft deployment/minecraft-bedrock-minecraft-bedrock \
+  -- cat /data/server.properties | grep -i "server-ip\|server-port"
+
+server-port=19132
+server-portv6=19133
+# server-ip=
+</pre>
+        <p>
+          <code>server-ip</code> was empty, meaning the server listened on all interfaces, and the
+          port was correct. So that theory was wrong too.
+        </p>
+        <p>
+          At that point I stopped guessing about the content of the packets and looked at them
+          directly, dumping them as hex on the relay while my phone tried to connect:
+        </p>
+        <pre>
+sudo tcpdump -i eth0 udp port 19132 -X
+</pre>
+        <p>
+          The detail that broke the case open was a size. The ping going in was 33 bytes, which is
+          correct. The pong coming back was <em>also</em> 33 bytes. A valid pong is around 150,
+          because it has to carry the server's metadata string. The reply contained the RakNet
+          framing and nothing else: the payload length field and the payload itself were simply
+          absent.
+        </p>
+        <p>
+          To be sure this was not something my own infrastructure was doing to the packet, I repeated
+          the capture on <code>k3s-worker-01</code> at the NodePort, which sits past every layer of
+          my setup: port forwarding, Tailscale, the relay, and Kubernetes networking:
+        </p>
+        <pre>
+tailscale0  In   pi2 &gt; k3s-worker-01:30000: UDP, length 33   ← ping
+tailscale0  Out  k3s-worker-01:30000 &gt; pi2: UDP, length 33   ← truncated pong
+</pre>
+        <p>
+          The truncated reply originated from the server process itself. A network fault would have
+          produced no response, or an inconsistent one. Not this consistently malformed packet with
+          exactly the wrong size.
+        </p>
+        <p>
+          With the fault localised to the server binary, I searched upstream and found others
+          reporting the same behaviour on fresh installs across unrelated machines, failing the
+          same readiness check with an unexpected end-of-file while reading the pong. Mojang's
+          hotfix notes for that release referenced a connectivity fix, but it was a change to the
+          client's tolerance for malformed replies, not a fix to the server. The server binary still
+          emitted 33-byte pongs.
+        </p>
 
         <h2>Root cause</h2>
-        <!-- One paragraph. The actual mechanism, stated precisely. If you can't state
-             it in a paragraph, the investigation section is missing a step. -->
-        <p></p>
+        <p>
+          A regression in Bedrock Dedicated Server versions 1.26.30.5 and 1.26.31.1: the code that
+          builds the unconnected pong wrote the RakNet framing fields, packet type, timestamp,
+          server GUID and magic bytes, but wrote a zero-length payload where the server metadata
+          string belongs. Clients receive a structurally valid packet with no content to parse, so
+          they never advance past discovery to an actual connection attempt.
+        </p>
 
         <h2>Fix</h2>
-        <!-- What you changed and why that over the alternatives. If the fix is a
-             workaround rather than a root-cause fix (like the relay), say so
-             explicitly and explain why that was the right call. -->
-        <p></p>
+        <p>
+          There was no downloadable fix available to me. I could not patch a closed-source binary, and downgrading
+          was not viable because Bedrock clients refuse to connect to a server on a different
+          protocol version, so my phone would have rejected an older server anyway.
+        </p>
+        <p>
+          What I did have was a machine already sitting in the path handling every packet. I extended
+          the relay's Python proxy to repair the reply in flight: remember the timestamp from each
+          incoming ping, detect an outgoing pong that is exactly 33 bytes, discard it, and construct
+          a correct one, echoing the stored timestamp and appending the server metadata string the
+          binary should have written. Everything that is not a malformed pong passes through
+          untouched, so actual gameplay traffic is unaffected.
+        </p>
+        <p>
+          This is a workaround, not a fix, and I want to be clear about that. It papers over an
+          upstream defect at a layer I control, and it carries real maintenance cost: the metadata
+          string is hardcoded, so when Minecraft's protocol version changes I have to update it by
+          hand or the client will reject the server as outdated. I accepted that because the
+          alternative was no server at all, and because the workaround is self-disabling. Once
+          Mojang ships a corrected binary, the pongs will exceed 33 bytes, and thus the check will stop
+          matching, and the repair path simply stops running.
+        </p>
 
         <h2>What I'd do differently</h2>
-        <!-- Honest reflection: what would have found this faster, what's still open,
-             what this changed about how you work. This section is what separates a
-             writeup from a war story. -->
-        <p></p>
+        <p>
+          <!-- EDIT: this section should be yours more than any other. A few honest
+               candidates, keep what's true and cut the rest: -->
+          I spent too long assuming the problem was mine and lied in my infrastructure. Both of my early theories (dropped packets,
+          then a misadvertised address) were about my own configuration, and I only questioned the
+          software itself after I had exhausted them. Searching for the symptom upstream earlier
+          would have found the existing bug reports in minutes rather than hours. I just couldnt believe
+          that a freshly downloaded binary from Mojang would be broken.
+        </p>
+        <p>
+          The measurement that solved this was also the cheapest one available. Comparing an observed
+          packet size against the expected size took seconds and pointed straight at the layer at
+          fault. I now reach for a capture much earlier when something is responding but not working,
+          rather than reasoning about what might be happening from the outside.
+        </p>
+        <p>
+          <!-- EDIT: worth adding if true — what's still open. The server is currently scaled
+               to zero pending an upstream fix, and the workaround remains in place. -->
+        </p>
 
         <footer class="article__footer">
           <p><a href="/case-studies/index.html">← All case studies</a></p>
