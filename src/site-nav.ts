@@ -30,7 +30,8 @@ class SiteNav extends HTMLElement {
           <a class="site-nav__home" href="/"${homeCurrent}>cedricschippers.dev</a>
           <ul class="site-nav__links">
             ${items}
-            <li><a href="https://github.com/cecedabro" rel="me">GitHub</a></li>
+            <li><a href="https://hva-portfolio.cedricschippers.dev" target="_blank" rel="me noopener noreferrer">HvA Portfolio</a></li>
+            <li><a href="https://github.com/cecedabro" target="_blank" rel="me noopener noreferrer">GitHub</a></li>
           </ul>
         </nav>
       </header>
