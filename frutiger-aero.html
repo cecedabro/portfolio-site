@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>frutiger-aero.css — showcase</title>
+    <meta
+      name="description"
+      content="Every element and helper class styled by frutiger-aero.css, a drop-in classless Frutiger Aero stylesheet, on one page."
+    />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="stylesheet" href="/frutiger-aero.css" />
+  </head>
+  <body>
+    <header>
+      <h1 class="shine">frutiger-aero.css</h1>
+      <p>a drop-in classless stylesheet — everything it styles, on one page</p>
+    </header>
+
+    <nav aria-label="Sections">
+      <a href="#type">Type</a>
+      <a href="#lists">Lists</a>
+      <a href="#quote">Quotes</a>
+      <a href="#code">Code</a>
+      <a href="#tables">Tables</a>
+      <a href="#forms">Forms</a>
+      <a href="#buttons">Buttons</a>
+      <a href="#disclosure">Disclosure</a>
+      <a href="#helpers">Helpers</a>
+    </nav>
+
+    <main>
+      <article id="type">
+        <h2>Typography</h2>
+        <p>
+          Headings run from <code>h1</code> to <code>h6</code>. Body text carries
+          <a href="#">a link</a>, <strong>strong</strong>, <em>emphasis</em>,
+          <code>inline code</code>, <kbd>Ctrl</kbd> + <kbd>S</kbd>,
+          <mark>a highlight</mark>, <abbr title="Cascading Style Sheets">CSS</abbr>,
+          <small>small print</small>, and H<sub>2</sub>O next to x<sup>2</sup>.
+        </p>
+        <h3>Heading level 3</h3>
+        <p>
+          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Praesent euismod nibh vitae
+          turpis lobortis, quis venenatis arcu dignissim. Sed ut perspiciatis unde omnis iste natus
+          error sit voluptatem.
+        </p>
+        <h4>Heading level 4</h4>
+        <h5>Heading level 5</h5>
+        <h6>Heading level 6</h6>
+        <hr />
+        <p>A horizontal rule sits above this line.</p>
+      </article>
+
+      <article id="lists">
+        <h2>Lists</h2>
+        <h3>Unordered</h3>
+        <ul>
+          <li>First glossy item</li>
+          <li>
+            Second, with a nested list
+            <ul>
+              <li>Nested one</li>
+              <li>Nested two</li>
+            </ul>
+          </li>
+          <li>Third item</li>
+        </ul>
+        <h3>Ordered</h3>
+        <ol>
+          <li>Step one</li>
+          <li>Step two</li>
+          <li>Step three</li>
+        </ol>
+        <h3>Definition</h3>
+        <dl>
+          <dt>Frutiger Aero</dt>
+          <dd>A design tendency, roughly 2004–2013: glossy glass, gradients, water, nature, bloom.</dd>
+          <dt>Skeuomorphism</dt>
+          <dd>Interface elements that imitate their real-world counterparts.</dd>
+        </dl>
+      </article>
+
+      <article id="quote">
+        <h2>Blockquote &amp; figure</h2>
+        <blockquote>
+          Water, glass, bubbles, and a little bloom — the mid-2000s desktop in one link tag.
+          <cite>— nobody in particular</cite>
+        </blockquote>
+        <figure>
+          <svg
+            viewBox="0 0 140 140"
+            width="140"
+            height="140"
+            role="img"
+            aria-label="A glossy blue orb"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <defs>
+              <radialGradient id="fa-orb" cx="38%" cy="32%" r="72%">
+                <stop offset="0%" stop-color="#dffcff" />
+                <stop offset="42%" stop-color="#5cc0ef" />
+                <stop offset="100%" stop-color="#0b5aa8" />
+              </radialGradient>
+              <radialGradient id="fa-hl" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stop-color="#ffffff" stop-opacity="0.9" />
+                <stop offset="100%" stop-color="#ffffff" stop-opacity="0" />
+              </radialGradient>
+            </defs>
+            <circle cx="70" cy="70" r="58" fill="url(#fa-orb)" stroke="#ffffff" stroke-opacity="0.5" />
+            <ellipse cx="54" cy="46" rx="30" ry="18" fill="url(#fa-hl)" />
+          </svg>
+          <figcaption>An inline SVG inside a <code>&lt;figure&gt;</code>.</figcaption>
+        </figure>
+      </article>
+
+      <article id="code">
+        <h2>Code</h2>
+        <p>Inline: <code>const shine = () =&gt; "aqua";</code></p>
+        <pre><code>function pong(buf) {
+  if (buf.length &lt; 35) {
+    throw new Error("truncated reply: " + buf.length + " bytes");
+  }
+  return parse(buf);
+}</code></pre>
+      </article>
+
+      <article id="tables">
+        <h2>Tables</h2>
+        <table>
+          <caption>Sensor log</caption>
+          <thead>
+            <tr>
+              <th>Time</th>
+              <th>Temp</th>
+              <th>Humidity</th>
+              <th>Pressure</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>12:00</td>
+              <td>17.9 °C</td>
+              <td>64%</td>
+              <td>1013.4 hPa</td>
+            </tr>
+            <tr>
+              <td>13:00</td>
+              <td>18.4 °C</td>
+              <td>62%</td>
+              <td>1013.2 hPa</td>
+            </tr>
+            <tr>
+              <td>14:00</td>
+              <td>18.9 °C</td>
+              <td>60%</td>
+              <td>1012.9 hPa</td>
+            </tr>
+          </tbody>
+        </table>
+      </article>
+
+      <article id="forms">
+        <h2>Forms &amp; controls</h2>
+        <form>
+          <fieldset>
+            <legend>Text inputs</legend>
+            <label for="f-text">Text</label>
+            <input id="f-text" type="text" placeholder="Type here…" />
+            <label for="f-email">Email</label>
+            <input id="f-email" type="email" placeholder="[email protected]" />
+            <label for="f-area">Textarea</label>
+            <textarea id="f-area" placeholder="Multiple lines…"></textarea>
+            <label for="f-select">Select</label>
+            <select id="f-select">
+              <option>Stable channel</option>
+              <option>Beta channel</option>
+            </select>
+          </fieldset>
+
+          <fieldset>
+            <legend>Toggles</legend>
+            <p><label><input type="checkbox" checked /> Enable gloss</label></p>
+            <p><label><input type="checkbox" /> Reduce motion</label></p>
+            <p>
+              <label><input type="radio" name="bg" checked /> Sky</label>
+              <label><input type="radio" name="bg" /> Grass</label>
+            </p>
+            <label for="f-range">Range</label>
+            <input id="f-range" type="range" />
+          </fieldset>
+
+          <fieldset>
+            <legend>Progress</legend>
+            <label for="p1">Determinate (66%)</label>
+            <progress id="p1" max="1" value="0.66"></progress>
+            <label for="p2">Indeterminate</label>
+            <progress id="p2"></progress>
+          </fieldset>
+        </form>
+      </article>
+
+      <article id="buttons">
+        <h2>Buttons</h2>
+        <p>
+          <button type="button">Button</button>
+          <button type="button" disabled>Disabled</button>
+          <a href="#buttons" role="button">Link button</a>
+          <input type="submit" value="Submit input" />
+        </p>
+        <p>A <code>&lt;button&gt;</code>, an <code>&lt;a role="button"&gt;</code> and submit inputs
+          all get the same Aero pill treatment.</p>
+      </article>
+
+      <article id="disclosure">
+        <h2>Disclosure</h2>
+        <details>
+          <summary>What is in this stylesheet?</summary>
+          <p>
+            Base typography, links, lists, blockquote, figure, code, tables, the full set of form
+            controls, buttons, progress bars, <code>&lt;details&gt;</code>, <code>&lt;dialog&gt;</code>,
+            scrollbars, and a handful of helper classes — all classless where possible.
+          </p>
+        </details>
+        <details open>
+          <summary>Already open</summary>
+          <p>A <code>&lt;details open&gt;</code> element starts expanded.</p>
+        </details>
+      </article>
+
+      <aside id="helpers">
+        <h2>Helper classes</h2>
+        <p><code>.pill</code> &nbsp;<span class="pill">design</span> <span class="pill">css</span>
+          <span class="pill">aero</span></p>
+        <p><code>.shine</code> &nbsp;<span class="shine">blue-to-green gradient text</span></p>
+        <p><code>.center</code></p>
+        <p class="center">This paragraph is centered.</p>
+        <p><code>.glass</code> and <code>.stack</code></p>
+        <div class="stack">
+          <div class="glass"><p>A <code>&lt;div class="glass"&gt;</code> — any element can become a frosted panel.</p></div>
+          <div class="glass"><p>A second one, spaced from the first by <code>.stack</code> on the wrapper.</p></div>
+        </div>
+      </aside>
+    </main>
+
+    <footer>
+      <p>frutiger-aero.css · a drop-in classless theme · <a href="/">back to the normal site</a></p>
+    </footer>
+  </body>
+</html>

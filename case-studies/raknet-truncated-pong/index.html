@@ -191,8 +191,6 @@ tailscale0  Out  k3s-worker-01:30000 &gt; pi2: UDP, length 33   ← truncated po
 
         <h2>What I'd do differently</h2>
         <p>
-          <!-- EDIT: this section should be yours more than any other. A few honest
-               candidates, keep what's true and cut the rest: -->
           I spent too long assuming the problem was mine and lied in my infrastructure. Both of my early theories (dropped packets,
           then a misadvertised address) were about my own configuration, and I only questioned the
           software itself after I had exhausted them. Searching for the symptom upstream earlier
@@ -200,14 +198,10 @@ tailscale0  Out  k3s-worker-01:30000 &gt; pi2: UDP, length 33   ← truncated po
           that a freshly downloaded binary from Mojang would be broken.
         </p>
         <p>
-          The measurement that solved this was also the cheapest one available. Comparing an observed
+          The measurement that solved this was also the least intrusive one available. Comparing an observed
           packet size against the expected size took seconds and pointed straight at the layer at
           fault. I now reach for a capture much earlier when something is responding but not working,
           rather than reasoning about what might be happening from the outside.
-        </p>
-        <p>
-          <!-- EDIT: worth adding if true — what's still open. The server is currently scaled
-               to zero pending an upstream fix, and the workaround remains in place. -->
         </p>
 
         <footer class="article__footer">
