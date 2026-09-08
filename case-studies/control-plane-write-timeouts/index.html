@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>The day my control plane stopped accepting writes — Cédric Schippers</title>
+    <meta
+      name="description"
+      content="Reads worked, writes hung. Tracing k3s write timeouts to workloads I had let land on the control plane, and recovering from the reboot that followed."
+    />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+  <body>
+    <site-nav current="case-studies"></site-nav>
+
+    <main>
+      <article class="article">
+        <header class="article__header">
+          <p class="case-card__meta">
+            <span class="tag">kubernetes</span>
+            <span class="tag">scheduling</span>
+            <span class="tag">storage</span>
+            <span class="tag">recovery</span>
+            <time class="tag" datetime="2026-08">August 2026</time>
+          </p>
+          <h1>The day my control plane stopped accepting writes</h1>
+        </header>
+
+        <h2>Summary</h2>
+        <p>
+          Every command that changed cluster state started timing out: rollouts, Helm installs,
+          patches. Reads kept working the whole time. The cause was a scheduling gap I had never
+          closed. k3s does not taint its control plane by default, so application pods, a monitoring
+          stack and a forgotten background process had piled up on the same node as the API server,
+          all competing for the disk that k3s's SQLite datastore needs for every write. Fixing it
+          took a reboot that nearly cost me the storage array, and the recovery included
+          re-addressing every service in the cluster.
+        </p>
+
+        <h2>Context</h2>
+        <p>
+          My cluster's control plane is a laptop with 8GB of RAM. It runs the k3s server with the
+          default SQLite datastore, and it also serves a 3.6TB NFS share to the rest of the cluster.
+          I chose that dual role early on because it was the machine with the drives attached. Two
+          worker nodes and a GPU node run the actual workloads. That was the idea, anyway.
+        </p>
+        <p>
+          One detail matters for this story. With a single k3s server, every write to cluster state
+          is a synchronous commit to one SQLite file on that node's disk. Reads are served from
+          memory and stay fast no matter what the disk is doing. Writes are only as fast as the disk
+          is free.
+        </p>
+
+        <h2>Symptoms</h2>
+        <p>
+          It started with a <code>kubectl rollout restart</code> that never returned. Then a Helm
+          uninstall hung. Meanwhile every <code>kubectl get</code> came back instantly, which is
+          what made it confusing. From every angle that did not involve changing something, the
+          cluster looked healthy.
+        </p>
+        <p>
+          On the control plane itself, memory was nearly gone: about 240MB free out of 7.5GB. The
+          k3s process alone was using 2.9GB after two months of uptime.
+        </p>
+
+        <h2>Investigation</h2>
+        <p>
+          The read/write split was the first real clue. A network problem or a crashed API server
+          would have broken reads too. Reads fast and writes hung pointed at the one thing only
+          writes touch: the datastore commit. Searching for that exact signature turned up the k3s
+          project's own discussions describing it, writes stalling when other processes compete
+          with SQLite for disk I/O or memory on the server node. The k3s documentation even
+          recommends running monitoring on a separate node for this reason.
+        </p>
+        <p>
+          So the question became what else was on this node. <code>ps aux --sort=-%mem</code>
+          answered that in two ways I did not expect.
+        </p>
+        <p>
+          First, a <code>qbittorrent-nox</code> process was running directly on the host. Not in a
+          container, not managed by Kubernetes, using 1.1GB of memory. I had started it two weeks
+          earlier during a debugging session from my phone and never stopped it. Pure waste, sitting
+          on the most sensitive node I have.
+        </p>
+        <p>
+          Second, and worse: when I checked pod placement in OpenLens, Grafana, Sonarr, Radarr,
+          Prowlarr, qBittorrent and a set of Longhorn storage replicas were all scheduled on the
+          control plane. I had assumed Kubernetes keeps workloads off the control plane by default.
+          Full Kubernetes distributions usually do, with a taint. k3s does not, because it is
+          designed to also work on a single node, so it leaves the control plane schedulable unless
+          you tell it otherwise. I never had.
+        </p>
+        <p>
+          Killing the rogue process freed memory but did not unstick the writes. Two months of k3s
+          uptime and all the misplaced pods were still there. A controlled reboot of the control
+          plane was the next step, and I knew going in that it was the riskiest thing I could do.
+          This node is the only copy of the datastore and the NFS server for the whole cluster.
+        </p>
+        <p>
+          The shutdown hung. On the console, systemd was trying to unmount the NFS volumes that pods
+          on this node had mounted. Those volumes were served by the NFS server on this same node,
+          which was shutting down at the same time. Every unmount failed and
+          <code>nfs-server.service</code> sat at its stop timeout. The dual role I had chosen for
+          convenience had turned the shutdown into a deadlock.
+          <!-- VERIFY: how did the shutdown finally complete, systemd's 4m30s timeout forcing it,
+               or did you power it off? The chat says both "forced reboot" and "hard power-off".
+               Be precise here. "I held the power button" is fine if that is what happened. -->
+          I waited out the timeout, and while it forced its way through, the console showed EXT4 I/O
+          errors on the storage array.
+        </p>
+
+        <h2>Root cause</h2>
+        <p>
+          The control plane was carrying workloads it should never have had, because k3s leaves the
+          server node schedulable and I had not applied a <code>NoSchedule</code> taint. Those
+          workloads, plus storage replicas, plus a forgotten host process, competed with the SQLite
+          datastore for disk I/O and memory on an 8GB machine. Reads survived because they do not
+          touch the disk. Writes died because they do. The near miss on shutdown had the same
+          origin: pods on the control plane held NFS mounts from the control plane, so the node could
+          not cleanly stop being a client of itself.
+        </p>
+
+        <h2>Fix</h2>
+        <p>
+          After the reboot, <code>fsck</code> confirmed the I/O errors had not left any lasting
+          corruption. The array was intact. All four nodes came back <code>Ready</code> and the
+          write timeouts were gone.
+        </p>
+        <p>
+          But MetalLB had reassigned load balancer IPs during the restart, so every service was
+          reachable on the wrong address, and several of the right addresses were now held by the
+          wrong service. Patching them back one at a time would fail on conflicts, so I had to
+          sequence it: two direct swaps for pairs that had simply exchanged addresses, and for a
+          cycle of six services, moving one to a temporary holding IP to break the loop before
+          walking the rest into place. Afterwards I baked static IPs into every service's Helm
+          values as annotations, so a future restart cannot shuffle them again.
+        </p>
+        <p>
+          Then the actual fix, one command I should have run on day one:
+        </p>
+        <pre>
+kubectl taint nodes k3s-cp-01 node-role.kubernetes.io/control-plane=true:NoSchedule
+</pre>
+        <p>
+          A new taint does not evict pods that are already running, so I deleted the misplaced ones
+          and let the scheduler put them on the workers. The control plane now runs k3s, NFS, and
+          nothing else.
+        </p>
+
+        <h2>What I'd do differently</h2>
+        <p>
+          Taint the control plane before deploying the first workload, and check the scheduling
+          defaults of the specific distribution instead of assuming what I knew about Kubernetes in
+          general applied. k3s being single-node friendly is a feature that turns into a hazard the
+          moment there is a second node.
+        </p>
+        <p>
+          The NFS server should not be on the control plane. It was the machine with the drives, so
+          it was convenient, but it means my most critical node also does the most disk I/O in the
+          cluster and cannot shut down cleanly while pods hold its exports. Moving NFS to a worker
+          or a dedicated box is the structural change this incident argues for. I have not done it
+          yet.
+        </p>
+        <p>
+          I had monitoring installed and it did not help, because Grafana was itself one of the pods
+          fighting for the control plane. Monitoring that lives on the thing it monitors goes down
+          with it. I also had no alert on control plane memory. The first sign of a node at 240MB
+          free was a hung command.
+        </p>
+        <p>
+          The single-server SQLite datastore has a ceiling, and this incident was a preview of it.
+          The upgrade path is an external etcd or a multi-server setup. I am not there yet, but I
+          now know what the wall looks like.
+        </p>
+
+        <footer class="article__footer">
+          <p><a href="/case-studies/index.html">← All case studies</a></p>
+        </footer>
+      </article>
+    </main>
+
+    <site-footer></site-footer>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

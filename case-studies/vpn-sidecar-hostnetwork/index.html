@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>A VPN sidecar that cut two nodes off the internet — Cédric Schippers</title>
+    <meta
+      name="description"
+      content="How a container's kill-switch firewall escaped its pod and locked down the physical node, twice in one evening, and what that taught me about blast radius."
+    />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+  <body>
+    <site-nav current="case-studies"></site-nav>
+
+    <main>
+      <article class="article">
+        <header class="article__header">
+          <p class="case-card__meta">
+            <span class="tag">networking</span>
+            <span class="tag">kubernetes</span>
+            <span class="tag">iptables</span>
+            <span class="tag">wireguard</span>
+            <time class="tag" datetime="2026-08">August 2026</time>
+          </p>
+          <h1>A VPN sidecar that cut two nodes off the internet</h1>
+        </header>
+
+        <h2>Summary</h2>
+        <p>
+          While debugging a VPN container that refused to connect, I ran it with
+          <code>hostNetwork: true</code> to rule out Kubernetes pod networking as the cause. The
+          container has a built-in kill switch: firewall rules that block all traffic except the VPN
+          tunnel. With host networking, those rules were applied to the physical node instead of the
+          pod. The VPN then failed to connect, the rules stayed behind, and the node lost all
+          internet access. Every other pod on it went down with it. This happened on two nodes in
+          the same evening. The lesson for me was about blast radius: giving a container access to
+          the host is a design decision, not a config flag.
+        </p>
+
+        <h2>Context</h2>
+        <p>
+          I wanted my torrent client to route all its traffic through a commercial VPN. The usual
+          way to do this in Kubernetes is a sidecar: a second container in the same pod that runs
+          <a href="https://github.com/qdm12/gluetun">gluetun</a>, which sets up a WireGuard tunnel.
+          Because containers in a pod share one network namespace, the application's traffic goes
+          through the tunnel without the application knowing anything about it.
+        </p>
+        <p>
+          Gluetun also comes with a kill switch. On startup it rewrites the iptables rules of the
+          network namespace it lives in. The default policy on outbound traffic becomes
+          <code>DROP</code>, with exceptions only for localhost, established connections, the local
+          subnet and the VPN endpoint itself. That is exactly what you want from a VPN container: if
+          the tunnel drops, the application must not leak traffic out the real interface. Inside a
+          pod's own namespace the only thing those rules can affect is the pod.
+        </p>
+        <p>
+          <!-- VERIFY: provider name. You were on ProtonVPN at this point, switched to Mullvad later. -->
+          The problem was that the tunnel would not come up. Gluetun's logs showed the same error on
+          every attempt:
+        </p>
+        <pre>
+RTNETLINK answers: No such device
+</pre>
+        <p>
+          That is a kernel routing error, and it appeared while gluetun tried to add an IPv6 route
+          for the tunnel. I spent most of an evening on it. I checked MTU, IPv6 routing on the node,
+          kernel versus userspace WireGuard, and whether my ISP or router was blocking the endpoint.
+          None of it fixed anything.
+        </p>
+
+        <h2>Symptoms</h2>
+        <p>
+          The first outage did not come from Kubernetes at all. To rule out pod networking, I
+          brought the same WireGuard config up directly on <code>k3s-worker-01</code> with
+          <code>wg-quick</code>. It failed with the identical error. That was actually useful,
+          because it proved the problem was not Kubernetes. But the interface it created on the way
+          to failing was never cleaned up. A <code>wg0</code> interface with routes attached stayed
+          on the node and hijacked its traffic, and the node lost internet.
+        </p>
+        <p>
+          The second outage came an hour or two later and is the one this writeup is really about.
+          Still trying to find the connection failure, I deployed the gluetun pod with
+          <code>hostNetwork: true</code> on <code>k3s-worker-02</code>, so the pod would use the
+          node's network namespace directly instead of its own. Shortly after, that node stopped
+          answering as well. DNS resolution timed out, then pings to public addresses showed 100%
+          packet loss. Image pulls on the node failed. Every pod scheduled there was effectively
+          offline.
+        </p>
+        <pre>
+$ ping -c 3 1.1.1.1
+3 packets transmitted, 0 received, 100% packet loss
+</pre>
+
+        <h2>Investigation</h2>
+        <p>
+          The first outage was easy once I looked at the interfaces. <code>ip a</code> showed the
+          leftover <code>wg0</code>, and <code>wg-quick down wg0</code> brought the node back.
+          Manually created interfaces do not clean themselves up, which I knew in theory and now
+          know in practice.
+        </p>
+        <p>
+          The second one I initially read as a DNS problem, because DNS was the first thing to fail.
+          <code>systemd-resolved</code> was running and processing requests, it just could not reach
+          its upstream servers. Pinging <code>1.1.1.1</code> directly, with no DNS involved, also
+          failed. So the node had lost connectivity below the DNS layer. Same symptom as the
+          <code>wg0</code> incident, but this time <code>ip a</code> showed no stray interface.
+        </p>
+        <p>
+          The timing pointed at gluetun. The node had gone dark right after the
+          <code>hostNetwork</code> pod started its connection attempts, and I knew what gluetun does
+          on startup. If its kill-switch rules had been written into the node's iptables instead of
+          a pod's, then a failed VPN connection would leave the node in exactly the state the kill
+          switch is designed to produce: everything blocked except the tunnel, and no tunnel.
+          Checking the firewall confirmed it:
+        </p>
+        <pre>
+$ sudo iptables -L -n -v
+
+Chain OUTPUT (policy DROP)
+ target  prot  in   out   source      destination
+ ACCEPT  all   *    lo    0.0.0.0/0   0.0.0.0/0
+ ACCEPT  all   *    *     0.0.0.0/0   0.0.0.0/0   state RELATED,ESTABLISHED
+ ACCEPT  all   *    eno1  0.0.0.0/0   192.168.x.0/24
+ ACCEPT  udp   *    eno1  0.0.0.0/0   &lt;vpn endpoint&gt;   udp dpt:51820
+</pre>
+        <p>
+          A default <code>DROP</code> on the node's outbound chain, and the only external
+          destination allowed was the VPN server on port 51820, which the node could not establish a
+          tunnel to. These were the kill switch rules, applied to the wrong namespace.
+        </p>
+        <p>
+          I scaled the deployment to zero and expected the rules to disappear with the container.
+          They did not. Nothing runs gluetun's teardown when a pod is killed, so the rules it had
+          written into the host stayed there after the container that wrote them was gone.
+        </p>
+
+        <h2>Root cause</h2>
+        <p>
+          <code>hostNetwork: true</code> removes the namespace boundary that normally keeps a
+          container's network changes contained. Gluetun's kill switch locks down whatever namespace
+          it runs in, and with that flag the namespace was the physical node. When the VPN failed to
+          connect, the node was left with the lockdown and without the tunnel. Kubernetes has no
+          concept of undoing what a container did to the host, so deleting the pod restored nothing.
+          The connection failure itself was a separate problem. The outage came from how I chose to
+          debug it.
+        </p>
+
+        <h2>Fix</h2>
+        <p>
+          The immediate repair was a manual firewall reset on the node: set the default policies
+          back to <code>ACCEPT</code> and flush the rules. That was safe here only because k3s and
+          Flannel regenerate their own iptables rules automatically. Connectivity came back right
+          away. I verified plain reachability and a registry pull before touching anything else.
+        </p>
+        <p>
+          The structural fix was to stop using <code>hostNetwork</code> for this workload at all. The
+          VPN sidecar now runs in the pod's own network namespace, where a misfiring kill switch can
+          only take down the one pod that wanted the VPN in the first place. That was the original
+          design. I only reached for <code>hostNetwork</code> as a diagnostic step, and the lesson is
+          that a diagnostic step with node-level side effects needs the same care as a production
+          change.
+        </p>
+        <p>
+          <!-- VERIFY: this is the resolution I have from the chat history. Mullvad native mode
+               worked immediately where ProtonVPN never connected inside a container. If you
+               understand why, add a sentence; if not, saying so is honest and fine. -->
+          The connection failure that started all of this was eventually solved by switching VPN
+          providers. The same WireGuard credentials that failed inside every container mode worked
+          fine on a bare Linux host and on my laptop. A different provider's config, using gluetun's
+          native provider mode, connected on the first try. I never conclusively found out what in
+          the original provider's config did not work inside the container environment.
+        </p>
+
+        <h2>What I'd do differently</h2>
+        <p>
+          Never test a privileged network change on a node that is running other workloads. Both
+          outages came from experiments, a manual <code>wg-quick</code> and a
+          <code>hostNetwork</code> pod, done on live worker nodes because that was convenient.
+          Draining the node first, or testing on a throwaway VM, would have cost five minutes and
+          prevented both.
+        </p>
+        <p>
+          Read what a container does to its host before giving it host access. I knew gluetun had a
+          kill switch and I knew what <code>hostNetwork</code> meant. I did not put the two together
+          until a node was dark. Any container that needs <code>NET_ADMIN</code> or
+          <code>hostNetwork</code> can break the node, and I should treat it that way.
+        </p>
+        <p>
+          When a node loses connectivity after network experiments, check for leftovers first:
+          <code>ip a</code> for interfaces, <code>iptables -L</code> for rules. In both incidents the
+          cause was state that outlived the process that created it, and both were visible within a
+          minute once I looked in the right place.
+        </p>
+
+        <footer class="article__footer">
+          <p><a href="/case-studies/index.html">← All case studies</a></p>
+        </footer>
+      </article>
+    </main>
+
+    <site-footer></site-footer>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

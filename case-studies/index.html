@@ -29,6 +29,44 @@
             <p class="case-card__meta">
               <span class="tag">networking</span>
               <span class="tag">kubernetes</span>
+              <span class="tag">iptables</span>
+              <span class="tag">wireguard</span>
+              <time class="tag" datetime="2026-08">August 2026</time>
+            </p>
+            <h2 class="case-card__title">
+              <a href="/case-studies/vpn-sidecar-hostnetwork/"
+                >A VPN sidecar that cut two nodes off the internet</a
+              >
+            </h2>
+            <p>
+              How a container's kill-switch firewall escaped its pod and locked down the physical
+              node — twice in one evening — and what that taught me about blast radius.
+            </p>
+          </li>
+
+          <li class="case-card">
+            <p class="case-card__meta">
+              <span class="tag">kubernetes</span>
+              <span class="tag">scheduling</span>
+              <span class="tag">storage</span>
+              <span class="tag">recovery</span>
+              <time class="tag" datetime="2026-08">August 2026</time>
+            </p>
+            <h2 class="case-card__title">
+              <a href="/case-studies/control-plane-write-timeouts/"
+                >The day my control plane stopped accepting writes</a
+              >
+            </h2>
+            <p>
+              Reads worked, writes hung. Tracing k3s write timeouts to workloads I'd let land on the
+              control plane — and recovering from the reboot that followed.
+            </p>
+          </li>
+
+          <li class="case-card">
+            <p class="case-card__meta">
+              <span class="tag">networking</span>
+              <span class="tag">kubernetes</span>
               <span class="tag">tcpdump</span>
               <time class="tag" datetime="2026-06"><!-- EDIT: month it happened -->June 2026</time>
             </p>
@@ -42,24 +80,6 @@
               Proving a fault was an upstream server regression, not my network, by capturing
               packets at the right layer — then working around it with a protocol-level fix in a
               UDP relay.
-            </p>
-          </li>
-
-          <li class="case-card">
-            <p class="case-card__meta">
-              <span class="tag">helm</span>
-              <span class="tag">kubernetes</span>
-              <time class="tag" datetime="2026-05"><!-- EDIT: month it happened -->May 2026</time>
-            </p>
-            <h2 class="case-card__title">
-              <a href="/case-studies/helm-field-ownership/"
-                >Why Helm refused to upgrade anything I had touched with kubectl</a
-              >
-            </h2>
-            <p>
-              <!-- EDIT: one-line summary in your own words -->
-              Hitting the same upgrade conflict three times before understanding Kubernetes field
-              ownership — and why the fix was to stop patching around the chart.
             </p>
           </li>
 
