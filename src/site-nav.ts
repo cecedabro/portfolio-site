@@ -9,7 +9,6 @@ const LINKS = [
   { id: 'case-studies', href: '/case-studies/', label: 'Case studies' },
   { id: 'architecture', href: '/architecture.html', label: 'Architecture' },
   { id: 'about', href: '/about.html', label: 'About' },
-  { id: 'frutiger-aero', href: '/frutiger-aero.html', label: 'Frutiger Aero' },
 ] as const
 
 type NavId = (typeof LINKS)[number]['id'] | 'home'

@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>window-ui.css — demo</title>
+    <meta
+      name="description"
+      content="A cleaned-up, single-file rewrite of a Windows 7 Aero 'window + glass + article panel' UI, demoed with a profile-page layout."
+    />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="stylesheet" href="/window-ui.css" />
+  </head>
+  <body>
+    <main class="stack">
+      <section class="row">
+        <div class="window window--md">
+          <div class="title-bar"><div class="title-bar-text">welcome.exe</div></div>
+          <div class="window-body">
+            <div class="banner">Welcome</div>
+
+            <div class="window glass">
+              <div class="title-bar"><div class="title-bar-text">about-me</div></div>
+              <div class="window-body has-space">
+                <div class="folder-row">
+                  <svg viewBox="0 0 24 24" width="28" height="28" aria-hidden="true">
+                    <path
+                      d="M2 6a2 2 0 0 1 2-2h5l2 2h9a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6Z"
+                      fill="#ffd76a"
+                      stroke="#c99a2e"
+                    />
+                  </svg>
+                  <p>Profile page assignment</p>
+                </div>
+                <div class="panel">
+                  <h2>Welcome to the profile page!</h2>
+                  <p>
+                    This is a small window with not much information in it — scroll down to see
+                    more about me in the windows below.
+                  </p>
+                  <p>~ Your name</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <aside class="stack">
+          <div class="window window--sm">
+            <div class="title-bar"><div class="title-bar-text">photo.jpg</div></div>
+            <div class="window-body has-space">
+              <div class="avatar" aria-hidden="true">CS</div>
+            </div>
+          </div>
+        </aside>
+      </section>
+
+      <section class="window window--lg">
+        <div class="title-bar"><div class="title-bar-text">previousProjects.org</div></div>
+        <div class="window-body">
+          <div class="banner">Previous projects</div>
+
+          <div class="row">
+            <div class="window glass">
+              <div class="title-bar"><div class="title-bar-text">my_artwebsite</div></div>
+              <div class="window-body has-space">
+                <div class="folder-row">
+                  <svg viewBox="0 0 24 24" width="28" height="28" aria-hidden="true">
+                    <path
+                      d="M2 6a2 2 0 0 1 2-2h5l2 2h9a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6Z"
+                      fill="#ffd76a"
+                      stroke="#c99a2e"
+                    />
+                  </svg>
+                  <p>A page of artistic expression</p>
+                </div>
+                <div class="panel">
+                  <h2>Love for expression</h2>
+                  <p>
+                    A short paragraph about the project: what it is, why you made it, and what it
+                    taught you. Two or three sentences is plenty.
+                  </p>
+                  <a href="#">View project →</a>
+                </div>
+              </div>
+            </div>
+
+            <div class="window glass">
+              <div class="title-bar"><div class="title-bar-text">gardening-ecosphere</div></div>
+              <div class="window-body has-space">
+                <div class="folder-row">
+                  <svg viewBox="0 0 24 24" width="28" height="28" aria-hidden="true">
+                    <path
+                      d="M2 6a2 2 0 0 1 2-2h5l2 2h9a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6Z"
+                      fill="#ffd76a"
+                      stroke="#c99a2e"
+                    />
+                  </svg>
+                  <p>A gardening + IT integration project</p>
+                </div>
+                <div class="panel">
+                  <h2>Gardening, my dearest</h2>
+                  <p>
+                    An ongoing project: a weather station on a Raspberry Pi, feeding a frontend
+                    that displays the data. Work in progress.
+                  </p>
+                  <a href="#">View project →</a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>

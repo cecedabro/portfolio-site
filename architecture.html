@@ -18,73 +18,187 @@
       <article class="section">
         <h1>Architecture</h1>
 
-        <!-- EDIT: 2-3 sentence overview. What the cluster is, what it runs, one line on
-             why it exists (learning by operating real infrastructure). -->
-        <p></p>
+        <!-- EDIT: 2 sentences. What it is, why it exists.
+             e.g. "Four-node k3s cluster on second-hand hardware. Built to learn by
+             operating, not reading." -->
+        <p>Four-node k3s cluster on second-hand hardware. </p>
 
         <h2>Overview</h2>
-        <!-- EDIT: the diagram. Start with ASCII in the <pre> below (nodes, IPs can be
-             omitted or generalized, roles, how traffic flows in via Cloudflare Tunnel).
-             Swap for an SVG later if you feel like it — the <pre> is fine to ship. -->
+        <!-- EDIT: the diagram. Two legitimate options — pick whichever you finish in
+             under an hour:
+             (a) ASCII in the <pre> below: boxes and arrows — internet, Cloudflare,
+                 the four nodes with roles, storage, the Pi relay. No IPs.
+             (b) A draw.io diagram exported as SVG (stays sharp on phones, a few KB).
+                 Put it at src/assets/architecture-diagram.svg and swap the <pre>
+                 below for:
+                 <img src="/src/assets/architecture-diagram.svg" alt="Cluster architecture diagram" /> -->
         <pre>
+Internet
+  │
+  ├─ Cloudflare Tunnel ──→ HTTP (Jellyfin, this site)
+  │
+  └─ Pi relay (mom's house) ──→ Tailscale ──→ Minecraft UDP
+                    │
+                    ▼
+          TP-Link gigabit switch
+                    │
+     ┌──────────────┼───────────────┬──────────┘
+     ▼              ▼                ▼              ▼
+control-plane   worker-01       worker-02        gpu-node
+     │
+     ▼
+JBOD drive caddy
+
+control-plane   laptop — k3s server + NFS export, only
+                node with a battery
+worker-01/02    HP EliteDesk — application pods
+gpu-node        HP Z400, GTX 1070 — tainted, Jellyfin
+                transcoding only
+
+Longhorn: SSDs on every node, replicated app-state volumes
         </pre>
 
         <h2>Hardware</h2>
-        <!-- EDIT: one <li> per node — machine, role, anything notable (e.g. GPU node
-             is a repurposed workstation with a GTX 1070 for transcoding). -->
+        <!-- EDIT: one <li> per node — machine, role, one notable thing.
+             e.g. "HP Z400, GTX 1070. GPU transcoding only, sleeps when idle." -->
         <ul>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
+          <li>Laptop, 8GB RAM. Control plane — runs the k3s server and the NFS export.
+            Only node with a battery, so it can shut down cleanly on a power cut.</li>
+          <li>HP EliteDesk (small form factor). Worker node 1 — general application pods + minecraft bedrock server.</li>
+          <li>HP EliteDesk (small form factor). Worker node 2 — general application pods.</li>
+          <li>HP Z400 workstation, GTX 1070. Tainted GPU node — currently only Jellyfin is GPU only since
+            transcoding runs on it.</li>
         </ul>
 
         <figure>
-          <!-- EDIT: photo of the actual machines. Put the file in src/assets/ and
-               reference it as /src/assets/cluster.jpg — Vite processes and
-               fingerprints it at build time. Phone photo is fine; janky is authentic. -->
-          <img src="/src/assets/cluster.jpg" alt="" width="1600" height="1200" />
+          <img
+            src="/src/assets/cluster-stack.jpg"
+            alt="Three of the four nodes stacked next to a desk: two HP EliteDesk minis on top of an HP Z400 tower, with a TP-Link switch above them"
+            width="1200"
+            height="1600"
+          />
           <figcaption>
-            <!-- EDIT: caption naming which machine is which -->
+            Top to bottom: the TP-Link switch, the two HP EliteDesk worker nodes, and the
+            HP Z400 GPU node. The control-plane laptop isn't pictured here.
+          </figcaption>
+        </figure>
+
+        <figure>
+          <img
+            src="/src/assets/cluster-storage.jpg"
+            alt="A dark enclosure on the floor behind the desk, with the control panel as a laptop folded close on the caddy."
+            width="1600"
+            height="1200"
+          />
+          <figcaption>
+            The JBOD drive caddy behind the desk, cabled up for the NFS export. The control panel
+            is the laptop which is closed and lies on the drive caddy.
           </figcaption>
         </figure>
 
         <h2>Decisions</h2>
-        <!-- EDIT: the heart of the page. One h3 + short paragraph per decision:
-             what was chosen, what the alternative was, why. Suggested set below —
-             keep the ones you can defend in an interview, cut the rest. -->
+        <!-- EDIT: the heart of the page. One h3 + short paragraph per decision: what
+             you chose, what the alternative was, one reason. Pick 3 to 5 of the six
+             below, cut the rest — keep the ones you can defend in an interview. -->
 
-        <h3>Why k3s and not full Kubernetes</h3>
-        <p></p>
+        <!-- <h3>Why k3s and not full Kubernetes</h3>
+        <p></p> -->
 
         <h3>Why bare metal instead of cloud</h3>
-        <p></p>
+        <p>
+          Mainly control, learning process but also costs.
+        </p>
+        <p>
+          I wanted to build this cluster as a means of learning. I wanted to learn how to set up the servers, how to run
+          actual services on it and actually use these services. It also just felt really cool to have an at home server which
+          is physically sitting in my room running my pods.
+        </p>
+        <p>
+          A physical bare metal server also gives way more control compared to the cloud. I can upgrade, change or even add more nodes
+          whenever I want without changing my subscription. There simply is no subscription. It are my machines, running services I
+          put on there. Of course since I'm basically running On Premise instead of Cloud, that means that I need to fix things when
+          they are failing or broken. But thats also the charm of it and makes it all the more rewarding when things do work.
+        </p>
+        <p>
+          About costs, only now since I'm working as Cloud Engineer at the HvA in a project did I realise how expensive cloud subscriptions
+          are! Simply running two containers for a tiny flask website costs me 10 euros already. Which is insane honestly in my opinion. I
+          believe my cluster could easily run hundreds if not thousands of those containers and only bill me maybe a few bucks a month
+          in energy costs. Of course I'm lucky to have been able to assemble my cluster very cheaply by contacting companies in my network
+          for old office computers. But I still believe that running bare metal is just way cheaper (especially important for me considering
+          im a student) compared to cloud.
+        </p>
 
-        <h3>Why NFS for media but Longhorn for application state</h3>
-        <p></p>
+        <!-- e.g. heading "NFS for media, Longhorn for state" — body: "3.6TB doesn't
+             replicate across 256GB SSDs. Bulk data on one NFS export, small config
+             volumes on Longhorn." -->
+        <h3>NFS for media, Longhorn for state</h3>
+        <p>
+          I only use the NFS for media as a bulk storage device. I guess you could compare it to
+          Blob storage. The SSD's from the nodes have been bundled together on Longhorn. This is to provide
+          running pods with secure config volumes and make the whole cluster more resillient. As to why Longhorn
+          specifically: it's what I found online to be a good pick when building the cluster simply.
+        </p>
 
         <h3>Why the GPU node is tainted</h3>
-        <p></p>
+        <p>This is the only node with a real dedicated GPU. It needs to be tainted so it actually picks
+          up pods which require GPU work. For now its only the Jellyfin pod, since that requires some transcoding
+          work when streaming big movies (For example a massive 52GB The Matrix HDR 4k movie file). I also briefly
+          fiddled around with a Moonshine pod for remote gaming, but the outdated Xeon chip on the Z400 showed its 
+          age. Even when running Gemcraft...
+        </p>
 
         <h3>Why Cloudflare Tunnel instead of open ports</h3>
-        <p></p>
+        <p>
+          This was both for convienience and securty. Since I live in student housing, I can't simply open a port.
+          The modem has been hidden away from me and apart from my appartments local network and router I can't really
+          configurate much. I literally simply can't open a port. Thats why I use a pi2 at my mom's house as a relay node
+          for my minecraft bedrock server.
+        </p>
+        <p>
+          Cloudflare Tunnel doesn't require an open port from my network, its a pod running on my cluster which reroutes the
+          traffic from another pod on the clusters network onto the open web through CloudFlare servers. This is both way more
+          secure since my cluster isnt the first point of attack and because that way my ip isnt exposed.
+        </p>
+
+        <h3>Why NFS sits on the control plane</h3>
+        <p>
+          The control plane is the only node which has a battery. Its a laptop. That way, when for some reason my power would
+          be cut or something happens to my house, at least the control plane has some ample time to manage the NFS and close its
+          connection gracefully instead of abruptly.
+        </p>
+        <p>
+          I also thought it to be more sensible. I only have one control panel, but multiple worker nodes. The worker nodes
+          should kind of randomly have pods running on them and distribute the work across each other, the control panel is my
+          brain of the cluster so it made sense to me to have that be the point of connection to the NFS (which is basically
+          an old second hand drive caddy where the drive configuration is JBOD).
+        </p>
 
         <h2>Known gaps</h2>
-        <!-- EDIT: the honest list — what a production setup would have that this
-             doesn't yet, and (one clause each) what you'd reach for: e.g. Ingress
-             instead of per-service LoadBalancers, RBAC, GitOps, real backups,
-             storage redundancy. This section reads as maturity, keep it. -->
+        <!-- EDIT: 4 or 5 items, one clause each — what a production setup would have
+             that this doesn't yet. e.g. "No GitOps yet. Manifests in Git, applied by
+             hand." Other candidates: Ingress instead of per-service LoadBalancers,
+             RBAC, real backups, storage redundancy, moving NFS off the control
+             plane. This section reads as maturity, keep it. -->
         <ul>
-          <li></li>
-          <li></li>
-          <li></li>
+          <li>There is no real Gitops yet. I do have some half assed jobs which run when pushed both this portfolio and the homelab repo,
+            but no real deployment CI/CD stands as of now. This is one of the next natural steps to implement.
+          </li>
+          <li>As of the backups, I do have Longhorn, but I haven't really set-up a real recovery plan nor backup routine. This is surely
+             something I should add before I discover exactly why I had to set this up in the first place...
+          </li>
+          <li>Although everything in the homelab YAML works with secrets where there is sensitive information, I know for sure that 
+            a few commits ago there were still passwords in the YAML. Even though these weren't dangerously important passwords, its still 
+            something I should fix one day by manually editing the Git history. As of now though, I can only ssh into the cluster with a Bitwarden
+            ssh token and all passwords are securely locked behind the Bitwarden vault. 
+          </li>
           <li></li>
         </ul>
 
         <p>
-          Full manifests and Helm values live in the
+          This site's own source is on
+          <a href="https://github.com/cecedabro/portfolio-site">GitHub</a>. Full manifests and Helm
+          values for the cluster live in the
           <a href="https://github.com/cecedabro/homelab">homelab repository</a>.
-          <!-- EDIT: only link this once the repo history is cleaned of secrets. -->
         </p>
       </article>
     </main>

@@ -1,0 +1,225 @@
+/*
+ * window-ui.css — a small, self-contained "Windows 7 Aero" window kit:
+ * chrome windows, a glass variant, and a teal content panel for the text
+ * inside them ("article window").
+ *
+ * Rewritten from a 7-file version (root.css, window.css, titlebar.css,
+ * body.css, style.css, frutiger_style.css, musicplayer.css) that had
+ * duplicate/conflicting :root blocks, two dead files, and classes used in
+ * the HTML that no stylesheet ever defined (.background, .has-space,
+ * .active). See the write-up for the full list. This file is the same
+ * visual result with none of that — one file, every class does something.
+ *
+ * Usage: <link rel="stylesheet" href="/window-ui.css">, then the markup
+ * patterns in window-ui-demo.html. No external images or fonts required.
+ */
+
+:root {
+  --aero-space: 6px;
+  --aero-radius: 6px;
+  --aero-border: rgba(0, 0, 0, 0.7);
+
+  --aero-blue: #4580c4;
+  --aero-blue-grad: linear-gradient(
+      to right,
+      rgba(255, 255, 255, 0.4),
+      rgba(0, 0, 0, 0.1),
+      rgba(255, 255, 255, 0.2)
+    ),
+    var(--aero-blue);
+  --aero-titlebar-glass: linear-gradient(
+    #ffffff80,
+    #ffffff4d 45%,
+    #0000001a 50%,
+    #0000001a 75%,
+    #ffffff80
+  );
+
+  --aero-surface: #f0f0f0;
+  --aero-surface-border: #8e8f8f;
+
+  /* the teal gradient "article window" content panel */
+  --aero-panel: linear-gradient(to bottom, #bdf7f1 0%, #dbfbf8 53%, #f6fefd 100%);
+
+  --aero-font: "Segoe UI", "Noto Sans", -apple-system, system-ui, sans-serif;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  padding: clamp(1rem, 4vw, 2rem);
+  font-family: var(--aero-font);
+  font-size: 14px;
+  line-height: 1.5;
+  color: #111;
+  background: linear-gradient(180deg, #bfe6ff 0%, #e9f7ff 45%, #ffffff 100%);
+  background-attachment: fixed;
+}
+
+img {
+  max-width: 100%;
+}
+
+/* --------------------------------------------------------------------
+   Layout — two primitives replace the original's three near-identical
+   stack classes, and this one wraps on a narrow screen (the original
+   .horizontal-stack didn't, so windows ran off the edge on mobile).
+   -------------------------------------------------------------------- */
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 20px;
+}
+
+/* --------------------------------------------------------------------
+   Window chrome
+   -------------------------------------------------------------------- */
+.window {
+  position: relative;
+  z-index: 0;
+  width: 100%;
+  border: 1px solid var(--aero-border);
+  border-radius: var(--aero-radius);
+  box-shadow: 2px 2px 10px 1px var(--aero-border), inset 0 0 0 1px rgba(255, 255, 255, 0.65);
+}
+
+.window::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: linear-gradient(transparent 20%, rgba(255, 255, 255, 0.7) 40%, transparent 41%),
+    var(--aero-blue-grad);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.85);
+}
+
+.window--sm { max-width: 220px; }
+.window--md { max-width: 460px; }
+.window--lg { max-width: 760px; }
+
+.title-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--aero-space) var(--aero-space) 0;
+  border-radius: var(--aero-radius) var(--aero-radius) 0 0;
+  box-shadow: inset 0 1px 0 #fffd, inset 1px 0 0 #fffd, inset -1px 0 0 #fffd;
+}
+
+.title-bar-text {
+  padding-bottom: var(--aero-space);
+  color: #000;
+  text-shadow: 0 0 6px #fff, 0 0 6px #fff, 0 0 6px #fff;
+}
+
+.window-body {
+  margin: var(--aero-space);
+  margin-top: 0;
+  background: var(--aero-surface);
+  border: 1px solid var(--aero-surface-border);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.6);
+}
+
+/* Was referenced in the original HTML (class="window-body has-space") but
+   never defined in any of the 7 files — a no-op. This is what it should do. */
+.window-body.has-space {
+  padding: var(--aero-space);
+}
+
+/* --------------------------------------------------------------------
+   Glass variant — frosted, sits nested inside a solid window
+   -------------------------------------------------------------------- */
+.window.glass::before {
+  opacity: 0.55;
+}
+
+.window.glass::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -10;
+  border-radius: inherit;
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+}
+
+.window.glass > .title-bar {
+  background: var(--aero-titlebar-glass);
+  background-attachment: fixed;
+}
+
+/* --------------------------------------------------------------------
+   The content panel ("article window") — a class, not a bare `article`
+   selector, so dropping this file into a page with unrelated <article>
+   elements elsewhere doesn't silently reskin them.
+   -------------------------------------------------------------------- */
+.panel {
+  margin: var(--aero-space);
+  padding: 14px;
+  border: 1px solid var(--aero-surface-border);
+  background: var(--aero-panel);
+}
+
+.panel h2 {
+  margin-top: 0;
+}
+
+.panel :last-child {
+  margin-bottom: 0;
+}
+
+/* --------------------------------------------------------------------
+   Small utilities used by the demo
+   -------------------------------------------------------------------- */
+.folder-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.folder-row svg {
+  flex: none;
+}
+
+.banner {
+  display: flex;
+  align-items: center;
+  height: 96px;
+  padding-inline: 16px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.15);
+  background: linear-gradient(120deg, #1c7fc4 0%, #4fb4e6 55%, #bdf7f1 100%);
+  color: #fff;
+  font-size: 1.5rem;
+  font-weight: 600;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+}
+
+.avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 140px;
+  height: 140px;
+  border-radius: 12px;
+  border: 2px solid #fff;
+  box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.25);
+  background: linear-gradient(135deg, #6fc3ff, #4580c4);
+  color: #fff;
+  font-size: 1.8rem;
+  font-weight: 700;
+}
