@@ -18,20 +18,9 @@
       <article class="section">
         <h1>Architecture</h1>
 
-        <!-- EDIT: 2 sentences. What it is, why it exists.
-             e.g. "Four-node k3s cluster on second-hand hardware. Built to learn by
-             operating, not reading." -->
         <p>Four-node k3s cluster on second-hand hardware. </p>
 
         <h2>Overview</h2>
-        <!-- EDIT: the diagram. Two legitimate options — pick whichever you finish in
-             under an hour:
-             (a) ASCII in the <pre> below: boxes and arrows — internet, Cloudflare,
-                 the four nodes with roles, storage, the Pi relay. No IPs.
-             (b) A draw.io diagram exported as SVG (stays sharp on phones, a few KB).
-                 Put it at src/assets/architecture-diagram.svg and swap the <pre>
-                 below for:
-                 <img src="/src/assets/architecture-diagram.svg" alt="Cluster architecture diagram" /> -->
         <pre>
 Internet
   │
@@ -65,8 +54,6 @@ GitOps          Flux applies the homelab repo to the cluster
         </pre>
 
         <h2>Hardware</h2>
-        <!-- EDIT: one <li> per node — machine, role, one notable thing.
-             e.g. "HP Z400, GTX 1070. GPU transcoding only, sleeps when idle." -->
         <ul>
           <li>Dell Latitude 3420 laptop, 8GB RAM. Control plane — runs the k3s server and the NFS export.
             Only node with a battery, so it can shut down cleanly on a power cut.</li>
@@ -108,9 +95,6 @@ GitOps          Flux applies the homelab repo to the cluster
         </figure>
 
         <h2>Decisions</h2>
-        <!-- EDIT: the heart of the page. One h3 + short paragraph per decision: what
-             you chose, what the alternative was, one reason. Pick 3 to 5 of the six
-             below, cut the rest — keep the ones you can defend in an interview. -->
 
         <!-- <h3>Why k3s and not full Kubernetes</h3>
         <p></p> -->
@@ -209,11 +193,6 @@ GitOps          Flux applies the homelab repo to the cluster
         </ul>
 
         <h2>Known gaps</h2>
-        <!-- EDIT: 4 or 5 items, one clause each — what a production setup would have
-             that this doesn't yet. e.g. "No GitOps yet. Manifests in Git, applied by
-             hand." Other candidates: Ingress instead of per-service LoadBalancers,
-             RBAC, real backups, storage redundancy, moving NFS off the control
-             plane. This section reads as maturity, keep it. -->
         <ul>
           <li>The control plane is a single server on the embedded SQLite datastore. If the laptop dies,
             nothing can be changed or rescheduled until it is restored from backup. The plan is embedded
