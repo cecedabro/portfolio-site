@@ -51,10 +51,11 @@ before the objects that live in it.
 
 ### 3. Add a public hostname on the Cloudflare tunnel
 
-The `cloudflared` pods in the `cloudflare` namespace run a **dashboard-managed**
-tunnel (their names end in `-remote`), so routes live in the Cloudflare Zero
-Trust dashboard — the same place the Jellyfin hostname is configured, not a file
-in the cluster.
+The `cloudflared` Deployment in the `cloudflare` namespace (2 replicas, one per
+node where possible) runs a **dashboard-managed** tunnel, so routes live in the
+Cloudflare Zero Trust dashboard — the same place the Jellyfin hostname is
+configured, not a file in the cluster. Its token comes from OpenBao through an
+ExternalSecret; see `apps/cloudflare/` in the homelab repo.
 
 1. Cloudflare **Zero Trust → Networks → Tunnels** → your tunnel → **Public
    Hostname** tab → **Add a public hostname**.
@@ -72,12 +73,14 @@ in the cluster.
 TLS terminates at Cloudflare's edge; the tunnel talks plain HTTP to the pod
 inside the cluster, which is why the Service and nginx only use port 80 / 8080.
 
-> **Want it to look like your other apps instead?** Every other service in your
-> cluster is `type: LoadBalancer` on a `192.168.50.x` MetalLB IP. To match that,
-> change `k8s/20-service.yaml` to `type: LoadBalancer`, pin a free IP with an
+> **Want a LAN address as well?** Most services in the cluster are still
+> `type: LoadBalancer` on a `192.168.50.x` MetalLB IP, but that is the legacy
+> pattern: the apps are moving to `https://<app>.home.cedricschippers.dev`
+> through Traefik. To get a LAN address for this site anyway, change
+> `k8s/20-service.yaml` to `type: LoadBalancer`, pin a free IP with an
 > annotation (`metallb.universe.tf/loadBalancerIPs: 192.168.50.NNN`), and put
-> `http://192.168.50.NNN:80` as the tunnel's Service URL. Functionally the same;
-> it just uses one IP from your pool and lets you open the site on the LAN.
+> `http://192.168.50.NNN:80` as the tunnel's Service URL. To use the Traefik
+> route instead, add a rule to `apps/traefik/ingresses.yaml` in the homelab repo.
 
 ## Updating the site
 
@@ -122,8 +125,16 @@ about another unwritable path, add it as one more `emptyDir` in the Deployment.
 - Resource limits are deliberately tiny (10m CPU / 32Mi request). Static nginx
   serving a handful of files needs almost nothing.
 - CI only builds and pushes — the cluster is not reachable from GitHub runners,
-  so the `kubectl` step stays manual (or wire it to a self-hosted runner / a
-  pull-based tool like Flux or Argo CD later).
-- This does **not** use Traefik. Traefik ships with k3s and is running, but the
-  cluster has no Ingress resources — every app is reached by IP or by the
-  tunnel. This site follows the tunnel path, so no Ingress here either.
+  so the `kubectl` step stays manual. Flux now runs the rest of the cluster from
+  the homelab repo, but nothing in `k8s/` is under Flux yet. The existing
+  pattern to copy is Ruilingen, where Flux image automation watches ghcr.io and
+  commits the new image tag.
+- This does **not** use Traefik. Traefik ships with k3s and serves the internal
+  apps on `*.home.cedricschippers.dev` (LAN/Tailscale only), but this site is
+  public and follows the tunnel path, so there is no Ingress for it.
+- The homelab repo has a NetworkPolicy for the `portfolio` namespace
+  (`apps/network-policies/portfolio.yaml`). It only accepts traffic from the
+  namespace itself, Traefik, the `cloudflare`, `monitoring` and `homepage`
+  namespaces, the LAN, Tailscale and the nodes' own pod-network addresses. When
+  a node is added, its addresses have to be added to that policy as well, or
+  kubelet probes and traffic that arrives through that node are refused.

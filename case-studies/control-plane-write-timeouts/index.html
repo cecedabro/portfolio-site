@@ -174,6 +174,20 @@ kubectl taint nodes k3s-cp-01 node-role.kubernetes.io/control-plane=true:NoSched
           now know what the wall looks like.
         </p>
 
+        <h2>Update, October 2026</h2>
+        <p>
+          Some of the gaps above have since been closed, others have not.
+        </p>
+        <ul>
+          <li>Alerting exists now. Prometheus and Alertmanager have rules for node down, node memory
+            pressure and node disk almost full, among others, and send them to my phone through ntfy.</li>
+          <li>The k3s datastore is backed up every night, encrypted, to the NAS, and from there to
+            Backblaze B2. The backup job is pinned to the control plane, with an explicit toleration
+            for the taint, because that is where the datastore lives.</li>
+          <li>NFS is still on the control plane. A plan for a three-server control plane on embedded
+            etcd is written down, but it has not been built.</li>
+        </ul>
+
         <footer class="article__footer">
           <p><a href="/case-studies/index.html">← All case studies</a></p>
         </footer>

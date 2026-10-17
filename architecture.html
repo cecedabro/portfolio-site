@@ -42,7 +42,7 @@ Internet
                     ▼
           TP-Link gigabit switch
                     │
-     ┌──────────────┼───────────────┬───────────────┬
+     ┌──────────────┼───────────────┬───────────────┐
      ▼              ▼               ▼               ▼
 control-plane   worker-01       worker-02        gpu-node
      │
@@ -56,19 +56,30 @@ gpu-node        HP Z400, GTX 1070 — tainted, Jellyfin
                 transcoding only
 
 Longhorn: SSDs on every node, replicated app-state volumes
+
+Traefik         LAN-only HTTPS for the internal apps, wildcard
+                Let's Encrypt certificate via cert-manager
+Backups         Longhorn + k3s datastore -> NAS (nightly)
+                -> Backblaze B2, encrypted (nightly)
+GitOps          Flux applies the homelab repo to the cluster
         </pre>
 
         <h2>Hardware</h2>
         <!-- EDIT: one <li> per node — machine, role, one notable thing.
              e.g. "HP Z400, GTX 1070. GPU transcoding only, sleeps when idle." -->
         <ul>
-          <li>Laptop, 8GB RAM. Control plane — runs the k3s server and the NFS export.
+          <li>Dell Latitude 3420 laptop, 8GB RAM. Control plane — runs the k3s server and the NFS export.
             Only node with a battery, so it can shut down cleanly on a power cut.</li>
-          <li>HP EliteDesk (small form factor). Worker node 1 — general application pods + minecraft bedrock server.</li>
-          <li>HP EliteDesk (small form factor). Worker node 2 — general application pods.</li>
+          <li>HP EliteDesk 800 G2 (small form factor, i7). Worker node 1 — general application pods + the two Minecraft Bedrock servers.</li>
+          <li>HP EliteDesk 800 G2 (small form factor, i7). Worker node 2 — general application pods.</li>
           <li>HP Z400 workstation, GTX 1070. Tainted GPU node — currently only Jellyfin is GPU only since
             transcoding runs on it.</li>
         </ul>
+
+        <p>
+          Two more machines sit outside the k3s cluster and run a separate kubeadm cluster. It is a
+          test bed for bootstrapping an OpenShift-like cluster from Git (GitOps).
+        </p>
 
         <figure>
           <img
@@ -133,10 +144,16 @@ Longhorn: SSDs on every node, replicated app-state volumes
              volumes on Longhorn." -->
         <h3>NFS for media, Longhorn for state</h3>
         <p>
-          I only use the NFS for media as a bulk storage device. I guess you could compare it to
+          I mainly use the NFS for media as a bulk storage device. I guess you could compare it to
           Blob storage. The SSD's from the nodes have been bundled together on Longhorn. This is to provide
           running pods with secure config volumes and make the whole cluster more resillient. As to why Longhorn
           specifically: it's what I found online to be a good pick when building the cluster simply.
+        </p>
+        <p>
+          The NFS share is the backup target too: Longhorn volumes (three replicas each, backed up nightly) and
+          the k3s datastore land on it, and from there an encrypted copy goes off-site to Backblaze B2 every night.
+          The media itself isn't copied off-site. The share is four 1 TB drives spanned with LVM, so there is
+          no redundancy on the drives themselves.
         </p>
 
         <h3>Why the GPU node is tainted</h3>
@@ -173,6 +190,24 @@ Longhorn: SSDs on every node, replicated app-state volumes
           an old second hand drive caddy where the drive configuration is JBOD).
         </p>
 
+        <h2>Operations</h2>
+        <ul>
+          <li><strong>GitOps.</strong> Flux applies the homelab repository to the cluster and runs most
+            apps as Helm releases. Renovate opens the version-bump pull requests.</li>
+          <li><strong>Secrets.</strong> Values live in OpenBao and External Secrets Operator syncs them
+            into Kubernetes Secrets. The repository only says where each value goes.</li>
+          <li><strong>Internal access.</strong> Internal apps are served over HTTPS on a private
+            subdomain through Traefik, with a wildcard Let's Encrypt certificate (DNS-01 on Cloudflare).
+            The names only resolve to a private address, so they work from the home network or over Tailscale.</li>
+          <li><strong>Network policies.</strong> Each app namespace only accepts traffic from itself,
+            Traefik, monitoring and the few places it needs to be reached from.</li>
+          <li><strong>Monitoring.</strong> Prometheus and Grafana, with Alertmanager sending alerts for
+            node, disk, storage and backup problems to my phone through ntfy.</li>
+          <li><strong>Maintenance.</strong> A nightly descheduler run rebalances pods, Ubuntu security
+            updates install automatically (no automatic reboots), and k3s upgrades run through
+            system-upgrade-controller, only on nodes I explicitly label.</li>
+        </ul>
+
         <h2>Known gaps</h2>
         <!-- EDIT: 4 or 5 items, one clause each — what a production setup would have
              that this doesn't yet. e.g. "No GitOps yet. Manifests in Git, applied by
@@ -180,25 +215,25 @@ Longhorn: SSDs on every node, replicated app-state volumes
              RBAC, real backups, storage redundancy, moving NFS off the control
              plane. This section reads as maturity, keep it. -->
         <ul>
-          <li>There is no real Gitops yet. I do have some half assed jobs which run when pushed both this portfolio and the homelab repo,
-            but no real deployment CI/CD stands as of now. This is one of the next natural steps to implement.
-          </li>
-          <li>As of the backups, I do have Longhorn, but I haven't really set-up a real recovery plan nor backup routine. This is surely
-             something I should add before I discover exactly why I had to set this up in the first place...
-          </li>
-          <li>Although everything in the homelab YAML works with secrets where there is sensitive information, I know for sure that 
-            a few commits ago there were still passwords in the YAML. Even though these weren't dangerously important passwords, its still 
-            something I should fix one day by manually editing the Git history. As of now though, I can only ssh into the cluster with a Bitwarden
-            ssh token and all passwords are securely locked behind the Bitwarden vault. 
-          </li>
-          <!-- <li></li> -->
+          <li>The control plane is a single server on the embedded SQLite datastore. If the laptop dies,
+            nothing can be changed or rescheduled until it is restored from backup. The plan is embedded
+            etcd with three servers, but it isn't done.</li>
+          <li>The NAS has no redundancy. The four drives are spanned, so one dead drive breaks the
+            filesystem. Backups go off-site, the media doesn't. Moving to RAID is planned.</li>
+          <li>The NFS server still sits on the control plane (see the decision above and the
+            control-plane case study).</li>
+          <li>GitOps is only partly done. Flux doesn't delete objects that are removed from Git, Traefik
+            and the Minecraft servers are still managed by hand, and this site's own deployment is still
+            a manual <code>kubectl</code> step.</li>
+          <li>OpenBao has to be unsealed by hand, with three keys, after every reboot.</li>
         </ul>
 
         <p>
           This site's own source is on
           <a href="https://github.com/cecedabro/portfolio-site">GitHub</a>. Full manifests and Helm
           values for the cluster live in the
-          <a href="https://github.com/cecedabro/homelab">homelab repository</a>.
+          <a href="https://github.com/cecedabro/homelab">homelab repository</a>, together with an
+          architecture write-up and an operations runbook.
         </p>
       </article>
     </main>
