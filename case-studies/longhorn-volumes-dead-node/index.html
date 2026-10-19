@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pods stuck on volumes when a node goes away — Cédric Schippers</title>
+    <meta
+      name="description"
+      content="Why pods with ReadWriteOnce Longhorn volumes got stuck when a node slept or died, and the Longhorn settings, rollout strategy and runbook that make it recover."
+    />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+  <body>
+    <site-nav current="case-studies"></site-nav>
+
+    <main>
+      <article class="article">
+        <header class="article__header">
+          <p class="case-card__meta">
+            <span class="tag">storage</span>
+            <span class="tag">kubernetes</span>
+            <span class="tag">longhorn</span>
+            <time class="tag" datetime="2026-10">October 2026</time>
+          </p>
+          <h1>Pods stuck on volumes when a node goes away</h1>
+        </header>
+
+        <h2>Summary</h2>
+        <p>
+          When a node went to sleep or died, pods with Longhorn volumes on it got stuck in <code>Terminating</code> and their replacements could not start. Longhorn’s default behaviour was to leave those pods alone. I changed two Longhorn settings so pods move off a dead node and a drain waits for replicas to be rebuilt first, and I wrote down what to do when a pod still gets stuck.
+        </p>
+
+        <h2>Context</h2>
+        <p>
+          Most of my apps keep their config on a Longhorn volume. These are ReadWriteOnce volumes, which can be attached to one node at a time. One of my nodes, the GPU machine, is suspended to RAM when it is idle, which is exactly the situation where a node disappears while pods are still scheduled on it.
+        </p>
+
+        <h2>Root cause</h2>
+        <p>
+          A ReadWriteOnce volume cannot be attached to a new node until the old attachment is released, and the old attachment is held by a pod on a node that no longer answers. With Longhorn’s default <code>node-down-pod-deletion-policy</code> of <code>do-nothing</code>, nobody deleted that pod, so the replacement waited indefinitely.
+        </p>
+
+        <h2>Fix</h2>
+        <ul>
+          <li><code>nodeDownPodDeletionPolicy: delete-both-statefulset-and-deployment-pod</code>, so pods are moved automatically when a node dies.</li>
+          <li><code>nodeDrainPolicy: block-for-eviction-if-contains-last-replica</code>, so <code>kubectl drain</code> waits until the replicas are rebuilt elsewhere.</li>
+          <li>Apps with a Longhorn volume use the <code>Recreate</code> strategy, so the old pod releases the volume before the new one starts.</li>
+          <li>A runbook step for a pod that is still stuck: scale the deployment to zero, wait until the volume shows as detached, scale back to one. Repeatedly deleting the pod only restarts the attach and detach cycle.</li>
+        </ul>
+        <p>
+          Both settings live in the Helm values, which Flux applies, so they are in Git instead of only in the Longhorn UI.
+        </p>
+
+        <h2>What I'd do differently</h2>
+        <p>
+          Drain the GPU node before suspending it, instead of relying on the cluster to recover afterwards. The recovery works now, but a planned drain is still faster and quieter than a node disappearing.
+        </p>
+
+
+        <footer class="article__footer">
+          <p><a href="/case-studies/index.html">← All case studies</a></p>
+        </footer>
+      </article>
+    </main>
+
+    <site-footer></site-footer>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

@@ -56,9 +56,8 @@
           pod's own namespace the only thing those rules can affect is the pod.
         </p>
         <p>
-          <!-- VERIFY: provider name. You were on ProtonVPN at this point, switched to Mullvad later. -->
-          The problem was that the tunnel would not come up. Gluetun's logs showed the same error on
-          every attempt:
+          The problem was that the tunnel would not come up. At that point I was using ProtonVPN.
+          Gluetun's logs showed the same error on every attempt:
         </p>
         <pre>
 RTNETLINK answers: No such device
@@ -163,14 +162,12 @@ Chain OUTPUT (policy DROP)
           change.
         </p>
         <p>
-          <!-- VERIFY: this is the resolution I have from the chat history. Mullvad native mode
-               worked immediately where ProtonVPN never connected inside a container. If you
-               understand why, add a sentence; if not, saying so is honest and fine. -->
           The connection failure that started all of this was eventually solved by switching VPN
-          providers. The same WireGuard credentials that failed inside every container mode worked
-          fine on a bare Linux host and on my laptop. A different provider's config, using gluetun's
-          native provider mode, connected on the first try. I never conclusively found out what in
-          the original provider's config did not work inside the container environment.
+          providers, from ProtonVPN to Mullvad. The same WireGuard credentials that failed inside
+          every container mode worked fine on a bare Linux host and on my laptop. Mullvad's config,
+          using gluetun's native provider mode, connected on the first try. I never found out what
+          exactly was wrong with the ProtonVPN setup inside the container. My guess is that something
+          had changed on their side, but I never confirmed that.
         </p>
 
         <h2>What I'd do differently</h2>

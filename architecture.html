@@ -65,7 +65,8 @@ GitOps          Flux applies the homelab repo to the cluster
 
         <p>
           Two more machines sit outside the k3s cluster and run a separate kubeadm cluster. It is a
-          test bed for bootstrapping an OpenShift-like cluster from Git (GitOps).
+          test bed for bootstrapping an OpenShift-like cluster from Git (GitOps) in a stricter,
+          more standard Kubernetes environment than k3s.
         </p>
 
         <figure>
@@ -174,6 +175,55 @@ GitOps          Flux applies the homelab repo to the cluster
           an old second hand drive caddy where the drive configuration is JBOD).
         </p>
 
+        <h3>Why internal names through Traefik instead of an IP per app</h3>
+        <p>
+          Every app used to get its own LoadBalancer IP from MetalLB. Now the internal apps are reachable at
+          <code>https://&lt;app&gt;.home.cedricschippers.dev</code>, all through a single Traefik address and one
+          wildcard Let's Encrypt certificate from cert-manager. The names only resolve to a private address, so
+          they work on the home network (or over Tailscale) and nothing extra is exposed to the internet.
+        </p>
+        <p>
+          The alternative was to keep an IP per app. I chose names because it is the better convention and it is
+          easier to manage: one place to add a route, real HTTPS everywhere, and no IP bookkeeping. I had IP
+          conflicts between apps, and after the reboot in the control-plane case study the addresses were
+          reshuffled. A few apps still hold their old IPs while I phase those out.
+        </p>
+
+        <h3>Why secrets live in OpenBao</h3>
+        <p>
+          Secrets live in OpenBao and External Secrets Operator syncs them into normal Kubernetes Secrets, so the
+          Git repository only says where a value goes and never contains it. Before this, secrets sat in the YAML
+          files, which is how a password ended up in the history (see
+          <a href="/case-studies/secrets-in-git-history/">the case study</a>). I chose OpenBao because it is good
+          practice, and because the UWV platform will use the same setup. The price is that OpenBao has to be
+          unsealed by hand after every reboot.
+        </p>
+
+        <h3>Why Flux and Renovate</h3>
+        <p>
+          Flux is open source and it is the GitOps tool that makes Git the source of truth: the cluster follows
+          what is in the homelab repository. Renovate watches the Helm chart and container image versions and
+          opens a pull request whenever there is an update. I review it and merge, and Flux deploys it. That
+          automates keeping the apps and services up to date, which is also good for security because old
+          versions don't stay around. Major versions wait for my approval.
+        </p>
+
+        <h2>What runs on it</h2>
+        <ul>
+          <li>Jellyfin, with a media stack around it. It is public through the tunnel, runs as a non-root user
+            and only sees the movies and tv folders of the NAS.</li>
+          <li>Nextcloud for files.</li>
+          <li>Prometheus, Alertmanager and Grafana for monitoring, and Homepage as a status dashboard.</li>
+          <li>Open WebUI, a chat interface for an Ollama instance on a PC at home, reached over Tailscale. It
+            can only answer while that PC is on.</li>
+          <li>Ruilingen, a shift-swap web app from its own repository, public on ruilingen.app through the
+            tunnel. A release is deployed by tagging a version: CI builds the image, Flux image automation commits
+            the new tag to the homelab repository and rolls it out.</li>
+          <li>This site, and my HvA portfolio site (a web app with a Postgres database).</li>
+          <li>Two Minecraft Bedrock servers, reached through the Pi relay.</li>
+          <li>Portainer for cluster management.</li>
+        </ul>
+
         <h2>Operations</h2>
         <ul>
           <li><strong>GitOps.</strong> Flux applies the homelab repository to the cluster and runs most
@@ -199,6 +249,8 @@ GitOps          Flux applies the homelab repo to the cluster
             etcd with three servers, but it isn't done.</li>
           <li>The NAS has no redundancy. The four drives are spanned, so one dead drive breaks the
             filesystem. Backups go off-site, the media doesn't. Moving to RAID is planned.</li>
+          <li>I haven't test-restored from the backups yet. They run every night and the restore procedures are
+            written down, but a backup only counts once a restore has worked.</li>
           <li>The NFS server still sits on the control plane (see the decision above and the
             control-plane case study).</li>
           <li>GitOps is only partly done. Flux doesn't delete objects that are removed from Git, Traefik

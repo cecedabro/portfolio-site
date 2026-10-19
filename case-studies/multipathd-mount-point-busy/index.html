@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>“Mount point busy” on one worker: multipathd and Longhorn — Cédric Schippers</title>
+    <meta
+      name="description"
+      content="Longhorn volumes would not mount on one worker node because Ubuntu’s multipathd was claiming the disks. The error, the cause and the two-line fix."
+    />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+  <body>
+    <site-nav current="case-studies"></site-nav>
+
+    <main>
+      <article class="article">
+        <header class="article__header">
+          <p class="case-card__meta">
+            <span class="tag">storage</span>
+            <span class="tag">linux</span>
+            <span class="tag">longhorn</span>
+            <time class="tag" datetime="2026-10">October 2026</time>
+          </p>
+          <h1>“Mount point busy” on one worker: multipathd and Longhorn</h1>
+        </header>
+
+        <h2>Summary</h2>
+        <p>
+          Pods with Longhorn volumes failed to start on <code>k3s-worker-02</code> with an <q>already mounted or mount point busy</q> error. The cause was <code>multipathd</code>, which Ubuntu runs by default, claiming the block devices that Longhorn attaches over iSCSI. Excluding them in <code>/etc/multipath.conf</code> fixed it.
+        </p>
+
+        <h2>Root cause</h2>
+        <p>
+          Longhorn exposes each volume to the node as an iSCSI block device (<code>/dev/sdX</code>). On Ubuntu, <code>multipathd</code> sees those devices, tries to manage them as multipath devices, and holds them, so the actual mount fails with <q>mount point busy</q>.
+        </p>
+
+        <h2>Fix</h2>
+        <p>
+          A blacklist for the <code>sd*</code> devices, then a restart of the service and a flush of the existing maps:
+        </p>
+<pre>
+printf 'blacklist {\n    devnode "^sd[a-z0-9]+"\n}\n' | sudo tee -a /etc/multipath.conf
+sudo systemctl restart multipathd &amp;&amp; sudo multipath -F
+</pre>
+
+        <h2>What I'd do differently</h2>
+        <p>
+          This is now a step in my runbook for adding a node, before any workload lands on it, instead of something to discover from a failing pod. It is also the first thing to check whenever a Longhorn volume will not mount on a node and the other nodes are fine.
+        </p>
+
+
+        <footer class="article__footer">
+          <p><a href="/case-studies/index.html">← All case studies</a></p>
+        </footer>
+      </article>
+    </main>
+
+    <site-footer></site-footer>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

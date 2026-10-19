@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>A password in git history is still a password — Cédric Schippers</title>
+    <meta
+      name="description"
+      content="A Nextcloud admin password and a home IP address were committed to my public homelab repo. Deleting them from the files was not enough. How I rotated, moved secrets to OpenBao and rewrote the history."
+    />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+  <body>
+    <site-nav current="case-studies"></site-nav>
+
+    <main>
+      <article class="article">
+        <header class="article__header">
+          <p class="case-card__meta">
+            <span class="tag">security</span>
+            <span class="tag">git</span>
+            <span class="tag">secrets</span>
+            <time class="tag" datetime="2026-10">October 2026</time>
+          </p>
+          <h1>A password in git history is still a password</h1>
+        </header>
+
+        <h2>Summary</h2>
+        <p>
+          My public homelab repository contained a Nextcloud admin password in a Helm values file and the public IP address of the router at my mother’s house in the Minecraft relay documentation. I removed both from the files in August, but they stayed in the git history. In October I rotated the password, moved the cluster’s secrets into OpenBao, and rewrote the history to remove both from every commit.
+        </p>
+
+        <h2>Root cause</h2>
+        <p>
+          Secrets lived in plain YAML next to the manifests. The August commit that cleaned them up only changed the current version of the files, and git keeps every old version. Anyone who cloned or browsed the repository could still read them.
+        </p>
+
+        <h2>Fix</h2>
+        <p>
+          Three steps:
+        </p>
+        <ul>
+          <li>Rotated the Nextcloud admin password, so the leaked one is worthless whatever happens to the history.</li>
+          <li>Moved secrets into OpenBao with External Secrets Operator. The repository now only says <em>where</em> a value goes, never the value itself.</li>
+          <li>Rewrote the history to remove the old password and the IP address from all commits, and force-pushed it. Existing clones have to be cloned again. The backup mirror I made first only lived in a temporary folder and is gone, so there is no way back to the old history.</li>
+        </ul>
+
+        <h2>What I'd do differently</h2>
+        <p>
+          Never commit a secret to begin with, and if one does get committed, rotate it first. Rewriting history is only cleanup: copies of the old commits may exist elsewhere, so only rotation makes the secret actually safe again.
+        </p>
+
+
+        <footer class="article__footer">
+          <p><a href="/case-studies/index.html">← All case studies</a></p>
+        </footer>
+      </article>
+    </main>
+
+    <site-footer></site-footer>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

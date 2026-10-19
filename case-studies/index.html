@@ -28,6 +28,66 @@
           <li class="case-card">
             <p class="case-card__meta">
               <span class="tag">networking</span>
+              <span class="tag">storage</span>
+              <span class="tag">monitoring</span>
+              <time class="tag" datetime="2026-10">October 2026</time>
+            </p>
+            <h2 class="case-card__title">
+              <a href="/case-studies/nas-uplink-100mbit/">The NAS link that ran at 100 Mbit/s for months</a>
+            </h2>
+            <p>
+              The server behind my whole media library and all my backups ran at a tenth of its speed for months, and nothing noticed. Finding it, and the alert that stops it happening silently again.
+            </p>
+          </li>
+
+          <li class="case-card">
+            <p class="case-card__meta">
+              <span class="tag">storage</span>
+              <span class="tag">linux</span>
+              <span class="tag">longhorn</span>
+              <time class="tag" datetime="2026-10">October 2026</time>
+            </p>
+            <h2 class="case-card__title">
+              <a href="/case-studies/multipathd-mount-point-busy/">“Mount point busy” on one worker: multipathd and Longhorn</a>
+            </h2>
+            <p>
+              Longhorn volumes would not mount on one node because Ubuntu’s multipathd was claiming the disks.
+            </p>
+          </li>
+
+          <li class="case-card">
+            <p class="case-card__meta">
+              <span class="tag">security</span>
+              <span class="tag">git</span>
+              <span class="tag">secrets</span>
+              <time class="tag" datetime="2026-10">October 2026</time>
+            </p>
+            <h2 class="case-card__title">
+              <a href="/case-studies/secrets-in-git-history/">A password in git history is still a password</a>
+            </h2>
+            <p>
+              Deleting a leaked password from the files was not enough. Rotation, OpenBao and a history rewrite.
+            </p>
+          </li>
+
+          <li class="case-card">
+            <p class="case-card__meta">
+              <span class="tag">storage</span>
+              <span class="tag">kubernetes</span>
+              <span class="tag">longhorn</span>
+              <time class="tag" datetime="2026-10">October 2026</time>
+            </p>
+            <h2 class="case-card__title">
+              <a href="/case-studies/longhorn-volumes-dead-node/">Pods stuck on volumes when a node goes away</a>
+            </h2>
+            <p>
+              Why pods with ReadWriteOnce volumes got stuck when a node slept or died, and the settings that make the cluster recover.
+            </p>
+          </li>
+
+          <li class="case-card">
+            <p class="case-card__meta">
+              <span class="tag">networking</span>
               <span class="tag">kubernetes</span>
               <span class="tag">iptables</span>
               <span class="tag">wireguard</span>

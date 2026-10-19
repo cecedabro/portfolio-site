@@ -26,6 +26,13 @@
           <h1>A game server that answered every ping with a broken reply</h1>
         </header>
 
+        <p>
+          <strong>Note, October 2026:</strong> this write-up covers Bedrock server versions 1.26.30.5
+          and 1.26.31.1. The servers have since moved to 1.26.52, which only supports the NetherNet
+          transport, and the network path described here (NodePort, Pi relay, port forward) still has
+          to be redesigned for it. This case study has not been updated for that yet.
+        </p>
+
         <h2>Summary</h2>
         <p>
           I deployed a Minecraft Bedrock server on my k3s cluster and could not connect to it from
@@ -71,7 +78,6 @@ k3s-worker-01             NodePort 30000 → 19132
 Minecraft Bedrock pod     namespace: minecraft
 </pre>
         <p>
-          <!-- EDIT: optional, delete if you'd rather not explain RakNet here. -->
           One protocol detail matters for the rest of this writeup. Bedrock uses UDP rather than TCP,
           with a library called RakNet layered on top to add reliability and ordering. Before a
           client tries to connect, it sends an <em>unconnected ping</em>; the server answers with an
@@ -87,10 +93,12 @@ Minecraft Bedrock pod     namespace: minecraft
           joinable. However, it always timed out at the discovery stage, before any connection attempt was made.
         </p>
         <p>
-          <!-- EDIT: add the mc-monitor detail if you want it — the chart's probes used
-               `mc-monitor status-bedrock`, which failed on the same malformed reply and
-               killed the pod every ~58s until you patched the probes out. It's a good
-               detail: the same bug surfaced twice in two different places. -->
+          The same bug showed up a second time, in a different place. The Helm chart's liveness and
+          readiness probes run <code>mc-monitor status-bedrock</code>, which sends the same RakNet
+          ping and parses the pong. Against the broken server it failed on the same malformed reply,
+          and Kubernetes killed the pod about 58 seconds after every start. The chart has no option to
+          turn these probes off, so I removed them with <code>kubectl patch</code> after every
+          <code>helm upgrade</code>.
         </p>
 
         <h2>Investigation</h2>

@@ -103,11 +103,8 @@
           which was shutting down at the same time. Every unmount failed and
           <code>nfs-server.service</code> sat at its stop timeout. The dual role I had chosen for
           convenience had turned the shutdown into a deadlock.
-          <!-- VERIFY: how did the shutdown finally complete, systemd's 4m30s timeout forcing it,
-               or did you power it off? The chat says both "forced reboot" and "hard power-off".
-               Be precise here. "I held the power button" is fine if that is what happened. -->
-          I waited out the timeout, and while it forced its way through, the console showed EXT4 I/O
-          errors on the storage array.
+          While it hung, the console showed EXT4 I/O errors on the storage array. In the end I held
+          the power button to cut the power and started the node again.
         </p>
 
         <h2>Root cause</h2>

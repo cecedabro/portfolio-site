@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>The NAS link that ran at 100 Mbit/s for months — Cédric Schippers</title>
+    <meta
+      name="description"
+      content="The NFS server for my whole cluster was linked at 100 Mbit/s instead of gigabit, and nothing noticed. Finding it, and the alert that makes sure it cannot happen silently again."
+    />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+  <body>
+    <site-nav current="case-studies"></site-nav>
+
+    <main>
+      <article class="article">
+        <header class="article__header">
+          <p class="case-card__meta">
+            <span class="tag">networking</span>
+            <span class="tag">storage</span>
+            <span class="tag">monitoring</span>
+            <time class="tag" datetime="2026-10">October 2026</time>
+          </p>
+          <h1>The NAS link that ran at 100 Mbit/s for months</h1>
+        </header>
+
+        <h2>Summary</h2>
+        <p>
+          The laptop that serves my NFS share (media, Longhorn backups and k3s datastore backups) was linked to the network at 100 Mbit/s instead of 1 Gbit/s. It stayed that way for months, because everything still worked, only slowly. I moved it to a gigabit port and added an alert so a slow link can no longer go unnoticed.
+        </p>
+
+        <h2>Context</h2>
+        <p>
+          Everything bulky in the cluster goes through that one link: media streaming, downloads, and the nightly backups. A fast-ethernet link tops out at roughly a tenth of what a gigabit link can carry, so it is a bottleneck for all of it at once.
+        </p>
+
+        <h2>Root cause</h2>
+        <p>
+          The link had come up at 100 Mbit/s, and nothing in the cluster measured link speed. Nothing failed, so nothing alerted. A degraded but working link looks exactly like a healthy one from the application side.
+        </p>
+
+        <h2>Fix</h2>
+        <p>
+          I moved the control-plane laptop to a gigabit port. To make it visible next time, Prometheus now has a <code>NodeLinkNotGigabit</code> alert that fires when an ethernet interface that is up reports less than 1 Gbit/s for ten minutes. Checking the link speed with <code>ethtool</code> is also a step in the runbook for adding a node.
+        </p>
+
+        <h2>What I'd do differently</h2>
+        <p>
+          Check the negotiated speed when a machine is first cabled, not only whether it has a connection. Anything that fails by getting slower instead of breaking needs a metric, because nobody will report it.
+        </p>
+
+
+        <footer class="article__footer">
+          <p><a href="/case-studies/index.html">← All case studies</a></p>
+        </footer>
+      </article>
+    </main>
+
+    <site-footer></site-footer>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
