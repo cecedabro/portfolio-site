@@ -28,7 +28,7 @@
 
         <h2>Summary</h2>
         <p>
-          The laptop that serves my NFS share (media, Longhorn backups and k3s datastore backups) was linked to the network at 100 Mbit/s instead of 1 Gbit/s. It stayed that way for months, because everything still worked, only slowly. I moved it to a gigabit port and added an alert so a slow link can no longer go unnoticed.
+          The laptop that serves my NFS share (media, Longhorn backups and k3s datastore backups) was linked to the network at 100 Mbit/s instead of 1 Gbit/s. The cause was the cable between the laptop and the switch. It stayed that way for months, because everything still worked, only slowly. I swapped the cable and added an alert so a slow link can no longer go unnoticed.
         </p>
 
         <h2>Context</h2>
@@ -36,14 +36,20 @@
           Everything bulky in the cluster goes through that one link: media streaming, downloads, and the nightly backups. A fast-ethernet link tops out at roughly a tenth of what a gigabit link can carry, so it is a bottleneck for all of it at once.
         </p>
 
+        <h2>Symptoms</h2>
+        <p>
+          I noticed it because I couldn't download and stream at the same time. Nothing reported an
+          error; the link was simply slow.
+        </p>
+
         <h2>Root cause</h2>
         <p>
-          The link had come up at 100 Mbit/s, and nothing in the cluster measured link speed. Nothing failed, so nothing alerted. A degraded but working link looks exactly like a healthy one from the application side.
+          The cable between the control-plane laptop and the switch only linked at 100 Mbit/s, and nothing in the cluster measured link speed. Nothing failed, so nothing alerted. A degraded but working link looks exactly like a healthy one from the application side.
         </p>
 
         <h2>Fix</h2>
         <p>
-          I moved the control-plane laptop to a gigabit port. To make it visible next time, Prometheus now has a <code>NodeLinkNotGigabit</code> alert that fires when an ethernet interface that is up reports less than 1 Gbit/s for ten minutes. Checking the link speed with <code>ethtool</code> is also a step in the runbook for adding a node.
+          I swapped the cable. To make it visible next time, Prometheus now has a <code>NodeLinkNotGigabit</code> alert that fires when an ethernet interface that is up reports less than 1 Gbit/s for ten minutes. Checking the link speed with <code>ethtool</code> is also a step in the runbook for adding a node.
         </p>
 
         <h2>What I'd do differently</h2>

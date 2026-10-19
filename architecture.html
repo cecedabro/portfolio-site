@@ -97,8 +97,13 @@ GitOps          Flux applies the homelab repo to the cluster
 
         <h2>Decisions</h2>
 
-        <!-- <h3>Why k3s and not full Kubernetes</h3>
-        <p></p> -->
+        <h3>Why k3s and not full Kubernetes</h3>
+        <p>
+          k3s was the right way to learn and to get started: one binary, quick to install, and light enough for
+          second-hand hardware. kubeadm is the next step and is closer to how professional platforms are run,
+          which is why the separate test cluster uses it. That is where I test my GitOps bootstrap in a stricter
+          environment.
+        </p>
 
         <h3>Why bare metal instead of cloud</h3>
         <p>

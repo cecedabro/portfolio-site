@@ -6,7 +6,7 @@
     <title>Pods stuck on volumes when a node goes away — Cédric Schippers</title>
     <meta
       name="description"
-      content="Why pods with ReadWriteOnce Longhorn volumes got stuck when a node slept or died, and the Longhorn settings, rollout strategy and runbook that make it recover."
+      content="Why pods with ReadWriteOnce Longhorn volumes can get stuck when a node sleeps or dies, and the Longhorn settings, rollout strategy and runbook that let the cluster recover."
     />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="stylesheet" href="/src/style.css" />
@@ -28,7 +28,7 @@
 
         <h2>Summary</h2>
         <p>
-          When a node went to sleep or died, pods with Longhorn volumes on it got stuck in <code>Terminating</code> and their replacements could not start. Longhorn’s default behaviour was to leave those pods alone. I changed two Longhorn settings so pods move off a dead node and a drain waits for replicas to be rebuilt first, and I wrote down what to do when a pod still gets stuck.
+          When a node goes to sleep or dies, pods with Longhorn volumes on it can get stuck in <code>Terminating</code>, and their replacements cannot start. Longhorn’s default behaviour is to leave those pods alone. I changed two Longhorn settings so pods move off a dead node and a drain waits for replicas to be rebuilt first, and I wrote down what to do when a pod still gets stuck.
         </p>
 
         <h2>Context</h2>
@@ -54,7 +54,7 @@
 
         <h2>What I'd do differently</h2>
         <p>
-          Drain the GPU node before suspending it, instead of relying on the cluster to recover afterwards. The recovery works now, but a planned drain is still faster and quieter than a node disappearing.
+          Drain the GPU node before suspending it, instead of relying on the cluster to recover afterwards. The settings are meant to make recovery automatic, but a planned drain is still faster and quieter than a node disappearing.
         </p>
 
 
